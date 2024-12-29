@@ -398,3 +398,9 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# others
+text_files/
+*.pt
+checkpoints/
+*trained_model*/
