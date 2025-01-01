@@ -402,5 +402,5 @@ FodyWeavers.xsd
 # others
 text_files/
 *.pt
-checkpoints/
+checkpoints*/
 *trained_model*/
