@@ -15,7 +15,7 @@ LEARNING_RATE = 5e-5
 CHECKPOINT_INTERVAL = 100
 
 
-def save_checkpoint(model, optimizer, scheduler, epoch, block_no, used_indices, unused_indices):
+def save_checkpoint(model, optimizer, scheduler, epoch, block_no):
     """
     Save a checkpoint with the model, optimizer, scheduler, and dataset state.
     """
@@ -27,8 +27,6 @@ def save_checkpoint(model, optimizer, scheduler, epoch, block_no, used_indices, 
         "scheduler_state_dict": scheduler.state_dict(),
         "epoch": epoch,
         "block_no": block_no,
-        "used_indices": used_indices,
-        "unused_indices": unused_indices
     }, checkpoint_path)
     print(f"Checkpoint saved to {checkpoint_path}")
 
@@ -42,6 +40,8 @@ def load_checkpoint(checkpoint_path, dataset):
     # Restore model, optimizer, and scheduler states
     model = GPT2LMHeadModel.from_pretrained("gpt2")
     model.load_state_dict(checkpoint["model_state_dict"])
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
     optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
     scheduler = get_scheduler(
@@ -50,9 +50,9 @@ def load_checkpoint(checkpoint_path, dataset):
     scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
     # Restore dataset indices
-    used_indices = checkpoint["used_indices"]
-    unused_indices = checkpoint["unused_indices"]
-    unused_subset = Subset(dataset, unused_indices)
+    all_indices = list(range(len(dataset)))
+    unused_subset = dataset.select(all_indices[checkpoint["block_no"]*BATCH_SIZE:])
+    print(f"now size: {len(unused_subset)} instead of full {len(dataset)}")
     dataloader = DataLoader(unused_subset, batch_size=BATCH_SIZE, shuffle=False)
 
     metadata = {
@@ -69,12 +69,11 @@ def tokenize_function(example, tokenizer):
     return tokenizer(example["text"], truncation=True, padding="max_length", max_length=BLOCK_SIZE)
 
 
-def prepare_dataloader(dataset, unused_indices, batch_size):
+def prepare_dataloader(dataset, batch_size):
     """
     Prepare the DataLoader for the unused portion of the dataset.
     """
-    unused_subset = Subset(dataset, unused_indices)
-    dataloader = DataLoader(unused_subset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return dataloader
 
 
@@ -93,8 +92,6 @@ def train():
 
     # Initialize dataset indices
     total_indices = list(range(len(tokenized_dataset)))
-    used_indices = []
-    unused_indices = total_indices[:]
 
     # Check if resuming from a checkpoint
     if os.path.exists(CHECKPOINT_DIR):
@@ -107,24 +104,28 @@ def train():
     else:
         print("Starting training from scratch.")
         model = GPT2LMHeadModel.from_pretrained("gpt2")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model.to(device)
         optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
         scheduler = get_scheduler(
             "linear", optimizer=optimizer, num_warmup_steps=0, num_training_steps=len(total_indices) * EPOCHS
         )
-        dataloader = prepare_dataloader(tokenized_dataset, unused_indices, BATCH_SIZE)
+        dataloader = prepare_dataloader(tokenized_dataset, BATCH_SIZE)
         start_epoch = 0
         start_block_no = 0
 
     # Move model to device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
-
+    complete_dataloader = prepare_dataloader(tokenized_dataset, BATCH_SIZE)
     # Training loop
     model.train()
     global_block_no = start_block_no
     for epoch in range(start_epoch, EPOCHS):
         epoch_loss = 0
-        progress_bar = tqdm(dataloader, desc=f"Epoch {epoch + 1}/{EPOCHS}")
+        if epoch == start_epoch:
+            progress_bar = tqdm(dataloader, desc=f"Epoch {epoch + 1}/{EPOCHS}")
+        else:
+            progress_bar = tqdm(complete_dataloader, desc=f"Epoch {epoch + 1}/{EPOCHS}")
 
         for batch_no, batch in enumerate(progress_bar):
             batch = {key: value.to(device) for key, value in batch.items()}
@@ -139,10 +140,6 @@ def train():
             optimizer.step()
             scheduler.step()
 
-            # Update indices
-            used_indices.append(unused_indices[batch_no])
-            unused_indices.remove(unused_indices[batch_no])
-
             # Log loss
             epoch_loss += loss.item()
             progress_bar.set_postfix({"loss": loss.item()})
@@ -152,9 +149,10 @@ def train():
 
             # Save checkpoint
             if global_block_no % CHECKPOINT_INTERVAL == 0:
-                save_checkpoint(model, optimizer, scheduler, epoch, global_block_no, used_indices, unused_indices)
+                save_checkpoint(model, optimizer, scheduler, epoch, global_block_no)
 
         print(f"Epoch {epoch + 1} completed. Average loss: {epoch_loss / len(dataloader)}")
+        global_block_no = 0
 
     # Save the final model
     model.save_pretrained(OUTPUT_DIR)
