@@ -46,7 +46,7 @@ training:
   checkpoint_dir: '../experiments/checkpoints/template/'
 
   # wandb
-  api_key_path: './api_keys.yaml'
+  api_key_path: './wandb_api_keys.yaml'
   wandb_project: 'trabank'
   wandb_exp_name: 'template'
   wandb_log_every: 50
