@@ -3,6 +3,7 @@
 Dataset is not shuffled in this version of implementation.
 """
 import os
+from typing import Any
 
 import torch
 from datasets import Dataset, load_dataset
@@ -20,7 +21,7 @@ LEARNING_RATE = 5e-5
 CHECKPOINT_INTERVAL = 100
 
 
-def save_checkpoint(model, optimizer, scheduler, epoch: int, block_no: int):
+def save_checkpoint(model: torch.nn.Module, optimizer: AdamW, scheduler: Any, epoch: int, block_no: int):
     """Save a checkpoint with the model, optimizer, scheduler, and dataset state."""
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
     checkpoint_path = os.path.join(CHECKPOINT_DIR, f'checkpoint_{epoch}_{block_no}.pt')
