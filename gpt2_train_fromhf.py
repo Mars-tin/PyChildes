@@ -1,11 +1,16 @@
+"""The gpt2_train_fromhf.py can train a gpt-2 model with huggingface dataset specified. It can store checkpoints every CHECKPOINT_INTERVAL (default 100) batches of data. The checkpoint includes a "block_no" that tracks which training data we have already covered. load_checkpoint function can recover the model as well as dataloader with only untrained parts.
+
+Dataset is not shuffled in this version of implementation.
+"""
 import os
+
 import torch
 from datasets import load_dataset
-from torch.utils.data import DataLoader, Subset
-from transformers import GPT2Tokenizer, GPT2LMHeadModel, AdamW, get_scheduler
+from torch.utils.data import DataLoader
 from tqdm import tqdm
+from transformers import AdamW, GPT2LMHeadModel, GPT2Tokenizer, get_scheduler
 
-# Initialize global constants
+# global constants
 CHECKPOINT_DIR = "./checkpoints"
 OUTPUT_DIR = "./gpt2_trained_model"
 BATCH_SIZE = 8
@@ -16,9 +21,7 @@ CHECKPOINT_INTERVAL = 100
 
 
 def save_checkpoint(model, optimizer, scheduler, epoch, block_no):
-    """
-    Save a checkpoint with the model, optimizer, scheduler, and dataset state.
-    """
+    """Save a checkpoint with the model, optimizer, scheduler, and dataset state."""
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
     checkpoint_path = os.path.join(CHECKPOINT_DIR, f"checkpoint_{epoch}_{block_no}.pt")
     torch.save({
@@ -32,9 +35,7 @@ def save_checkpoint(model, optimizer, scheduler, epoch, block_no):
 
 
 def load_checkpoint(checkpoint_path, dataset):
-    """
-    Load a checkpoint and restore the training state.
-    """
+    """Load a checkpoint and restore the training state."""
     checkpoint = torch.load(checkpoint_path)
 
     # Restore model, optimizer, and scheduler states
@@ -63,24 +64,18 @@ def load_checkpoint(checkpoint_path, dataset):
 
 
 def tokenize_function(example, tokenizer):
-    """
-    Tokenize the dataset examples.
-    """
+    """Tokenize the dataset examples."""
     return tokenizer(example["text"], truncation=True, padding="max_length", max_length=BLOCK_SIZE)
 
 
 def prepare_dataloader(dataset, batch_size):
-    """
-    Prepare the DataLoader for the unused portion of the dataset.
-    """
+    """Prepare the DataLoader for the unused portion of the dataset."""
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return dataloader
 
 
 def train():
-    """
-    Main training loop with checkpointing and dataset tracking.
-    """
+    """Main training loop with checkpointing and dataset tracking."""
     # Load the dataset
     dataset = load_dataset("wonderwind271/ACL-papers")["train"]
     tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
