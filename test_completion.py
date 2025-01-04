@@ -17,12 +17,12 @@ def generate_text(model_path, input_text, num_return_sequences=5, max_length=50)
         List[str]: Generated text completions.
     """
     # Load the trained model and tokenizer
-    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
     model = GPT2LMHeadModel.from_pretrained(model_path)
     model.eval()  # Set model to evaluation mode
 
     # Encode the input text
-    input_ids = tokenizer.encode(input_text, return_tensors="pt")
+    input_ids = tokenizer.encode(input_text, return_tensors='pt')
 
     # Generate completions
     with torch.no_grad():
@@ -40,19 +40,19 @@ def generate_text(model_path, input_text, num_return_sequences=5, max_length=50)
     return [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     # Path to the trained model
-    model_path = "./gpt2_trained_model"
+    model_path = './gpt2_trained_model'
 
     # Input string
-    input_text = "Once upon a time in a distant land,"
+    input_text = 'Once upon a time in a distant land,'
 
     # Generate completions
     completions = generate_text(model_path, input_text, num_return_sequences=5, max_length=50)
 
     # Print the results
-    print("Input Text:")
+    print('Input Text:')
     print(input_text)
-    print("\nGenerated Completions:")
+    print('\nGenerated Completions:')
     for i, completion in enumerate(completions):
-        print(f"{i + 1}. {completion}")
+        print(f'{i + 1}. {completion}')
