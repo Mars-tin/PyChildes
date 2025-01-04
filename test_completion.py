@@ -1,15 +1,18 @@
-# script3_test_gpt2.py
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
+"""test the completion ability of a model."""
+
 import torch
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+
 
 def generate_text(model_path, input_text, num_return_sequences=5, max_length=50):
-    """
-    Generates text completions using a trained GPT-2 model.
+    """Generates text completions using a trained GPT-2 model.
+
     Args:
         model_path (str): Path to the trained GPT-2 model.
         input_text (str): Input text to generate completions for.
         num_return_sequences (int): Number of completions to generate.
         max_length (int): Maximum length of the generated sequence (including input).
+
     Returns:
         List[str]: Generated text completions.
     """
@@ -35,6 +38,7 @@ def generate_text(model_path, input_text, num_return_sequences=5, max_length=50)
 
     # Decode and return the completions
     return [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
+
 
 if __name__ == "__main__":
     # Path to the trained model

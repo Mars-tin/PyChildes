@@ -1,11 +1,15 @@
+"""collect dataset from local .txt folder."""
+
 import os
-import torch
 import re
+
+import torch
 from transformers import GPT2Tokenizer
 
+
 def collect_and_tokenize_text(input_dir, output_file, block_size=128):
-    """
-    Collects text files, tokenizes them, and saves the tokenized dataset.
+    """Collects text files, tokenizes them, and saves the tokenized dataset.
+
     Args:
         input_dir (str): Directory containing text files.
         output_file (str): Path to save the tokenized dataset.
@@ -32,6 +36,7 @@ def collect_and_tokenize_text(input_dir, output_file, block_size=128):
     # Save the tokenized data
     torch.save(input_ids, output_file)
     print(f"Tokenized dataset saved to {output_file}.")
+
 
 if __name__ == "__main__":
     input_dir = "./text_files"  # Directory containing .txt files
