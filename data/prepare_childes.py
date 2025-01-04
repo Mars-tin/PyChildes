@@ -25,18 +25,18 @@ def process_cha_file(input_file: str, output_file: str) -> None:
         with open(output_file, 'w', encoding='utf-8') as f:
             f.writelines(processed_lines)
 
-        print(f"Successfully processed {input_file}")
-        print(f"processed content written to {output_file}")
+        print(f'Successfully processed {input_file}')
+        print(f'processed content written to {output_file}')
 
     except FileNotFoundError:
-        print(f"Error: File {input_file} not found")
+        print(f'Error: File {input_file} not found')
     except IOError as e:
-        print(f"IO error occurred: {str(e)}")
+        print(f'IO error occurred: {str(e)}')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
     # Example usage
-    input_file = "childes/Eng-NA/Bates/Free20/amy.cha"
-    output_file = "childes_prep/output.cha"
+    input_file = 'childes/Eng-NA/Bates/Free20/amy.cha'
+    output_file = 'childes_prep/output.cha'
     process_cha_file(input_file, output_file)
