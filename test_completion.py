@@ -4,7 +4,7 @@ import torch
 from transformers import GPT2LMHeadModel, GPT2Tokenizer
 
 
-def generate_text(model_path, input_text, num_return_sequences=5, max_length=50):
+def generate_text(model_path: str, input_text: str, num_return_sequences: int = 5, max_length: int = 50):
     """Generates text completions using a trained GPT-2 model.
 
     Args:

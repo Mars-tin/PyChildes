@@ -7,7 +7,7 @@ import torch
 from transformers import GPT2Tokenizer
 
 
-def collect_and_tokenize_text(input_dir, output_file, block_size=128):
+def collect_and_tokenize_text(input_dir: str, output_file: str, block_size: str = 128):
     """Collects text files, tokenizes them, and saves the tokenized dataset.
 
     Args:

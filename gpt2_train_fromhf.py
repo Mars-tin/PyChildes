@@ -5,7 +5,7 @@ Dataset is not shuffled in this version of implementation.
 import os
 
 import torch
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import AdamW, GPT2LMHeadModel, GPT2Tokenizer, get_scheduler
@@ -20,7 +20,7 @@ LEARNING_RATE = 5e-5
 CHECKPOINT_INTERVAL = 100
 
 
-def save_checkpoint(model, optimizer, scheduler, epoch, block_no):
+def save_checkpoint(model, optimizer, scheduler, epoch: int, block_no: int):
     """Save a checkpoint with the model, optimizer, scheduler, and dataset state."""
     os.makedirs(CHECKPOINT_DIR, exist_ok=True)
     checkpoint_path = os.path.join(CHECKPOINT_DIR, f'checkpoint_{epoch}_{block_no}.pt')
@@ -34,7 +34,7 @@ def save_checkpoint(model, optimizer, scheduler, epoch, block_no):
     print(f'Checkpoint saved to {checkpoint_path}')
 
 
-def load_checkpoint(checkpoint_path, dataset):
+def load_checkpoint(checkpoint_path: int, dataset: Dataset):
     """Load a checkpoint and restore the training state."""
     checkpoint = torch.load(checkpoint_path)
 
@@ -68,7 +68,7 @@ def tokenize_function(example, tokenizer):
     return tokenizer(example['text'], truncation=True, padding='max_length', max_length=BLOCK_SIZE)
 
 
-def prepare_dataloader(dataset, batch_size):
+def prepare_dataloader(dataset: Dataset, batch_size: int):
     """Prepare the DataLoader for the unused portion of the dataset."""
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
     return dataloader
