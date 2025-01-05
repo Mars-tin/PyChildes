@@ -1,14 +1,21 @@
 # TraBank Data Preprocessing
 
+Start by creating two sub-directories: `raw/` and `prep/` in `data/`.
+```bash
+mkdir raw
+mkdir prep
+```
+
 ## Corpora for Cognitive Inquiry
 
 ### Childes Transcripts (English)
 - Download the [`Eng-NA`](https://childes.talkbank.org/access/Eng-UK/0-Eng-NA-MOR.zip) and [`Eng-UK`](https://childes.talkbank.org/access/Eng-UK/0-Eng-UK-MOR.zip) collections of the Childes corpora, or run the following scripts.
     ```bash
+    cd raw/
     wget https://childes.talkbank.org/access/Eng-NA/0-Eng-NA-MOR.zip
     wget https://childes.talkbank.org/access/Eng-UK/0-Eng-UK-MOR.zip
     ```
-- Unzip the file and organize the directory as follows.
+- Unzip the file and organize it in the `raw/` directory as follows.
 
 ```bash
 .
@@ -33,7 +40,7 @@
 
 ### BabyLM Challenge Round 1 Corpora (100M)
 - Download `train_100M.zip` at [osf.io](https://osf.io/download/rduj2/).
-- Unzip the file and organize the directory as follows.
+- Unzip the file and organize it in the `raw/` directory as follows.
 
 ```bash
 .

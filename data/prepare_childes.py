@@ -137,10 +137,6 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     if config.utterance.get('keep_speaker', True):
         speaker = '<' + speaker_id[1:] + '>'
 
-    # Process nonverbal token
-    marker = config.utterance.get('nonverbal', '<0>')
-    utterance = re.sub(r'0', marker, utterance)
-
     # Process incomplete words
     incomplete = config.utterance['incomplete']
 
@@ -153,6 +149,10 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
         utterance = re.sub(r'&=0', '', utterance)
     else:
         utterance = re.sub(r'&=0\w+', '', utterance)
+
+    # Process nonverbal token
+    marker = config.utterance.get('nonverbal', '<0>')
+    utterance = re.sub(r'0', marker, utterance)
 
     # Process unidentifiable markers
     unidentifiable = config.utterance['unidentifiable']

@@ -10,7 +10,7 @@ utterance:
 
   incomplete:
     noncompletion: true
-    omitted: true
+    omitted: false
 
   unidentifiable:
     unintelligible: '<unk>'
