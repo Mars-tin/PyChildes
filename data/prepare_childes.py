@@ -145,6 +145,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     else:
         utterance = re.sub(r'\(.*?\)\s*', '', utterance)
 
+    # [TODO]: Create special handles for `&=0` + POS, e.g., `&=0det`.
     if incomplete.get('omitted', True):
         utterance = re.sub(r'&=0', '', utterance)
     else:
@@ -163,9 +164,14 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     marker = unidentifiable.get('phonological', '<unk>')
     utterance = re.sub(r'yyy', marker, utterance)
 
+    marker = unidentifiable.get('untranscribed', '<unk>')
+    utterance = re.sub(r'www', marker, utterance)
+
     # Process scoped markers
     scoped_markers = config.utterance['scoped']
     for key, marker in scoped_markers.items():
+
+        # [TODO]: Handle angle brackets cases like `<take your shoes off> [!] .`
         if key == 'stressed':
             utterance = re.sub(r'\[!\]\s+(\S+)', r'<stress> \\1 </stress>', utterance)
 

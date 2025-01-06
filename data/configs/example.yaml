@@ -1,0 +1,149 @@
+# ==========================
+# Configuration for .cha file processing from Childes
+# ==========================
+# @schema: https://talkbank.org/manuals/CHAT.html
+# @version: 1.1.0
+# @description: Configuration schema for .cha processing pipeline
+# @required: ['header', 'utterance', 'dependent']
+
+
+# Headers (@)
+# -----------
+# A header is a line of text that gives information about the participants and the setting.
+# All headers begin with the “@” sign.
+# See Sec. 7 in https://talkbank.org/manuals/CHAT.html#_Toc176356502
+header:
+
+  # keep_data:
+  # -----------
+  # Controls header retention in output file
+  #   Values (bool):
+  #     true = keep headers
+  #     false = remove headers
+  #   Default: false
+  keep_data: false
+
+
+# Utterances (*)
+# -----------
+# Lines beginning with * indicate what was actually said. These are called “main lines.”
+# Each main line/tier should code one and only one utterance.
+# When a speaker produces several utterances in a row, code each with a new main line.
+# The following arguments control the processing of main tiers.
+utterance:
+
+  # keep_data:
+  # -----------
+  # Controls utterance retention in output file.
+  #   Values (bool):
+  #     true = keep utterances
+  #     false = remove utterances
+  #   Default: true
+  keep_data: true
+
+  # keep_speaker:
+  # -----------
+  # Controls speaker token retention in output file.
+  #   Refer To: Sec. 5.1.7
+  #   Values (bool):
+  #     true = keep speaker tokens
+  #     false = remove speaker tokens
+  #   Default: true
+  keep_speaker: true
+
+  # nonverbal:
+  # -----------
+  # Process the `0` symbol to mark cases where only one form is used.
+  # In the main lines, it is usually used to indicate that there is an action but no speech.
+  #   Refer To: Sec. 16.4
+  #   Values (str): '<your_choice_of_silence_token>'
+  #   Default: '<0>'
+  nonverbal: '<0>'
+
+  # incomplete:
+  # -----------
+  # Process the incomplete and omitted words.
+  # In the main lines, words may also be incomplete or even fully omitted.
+  #   Refer To: Sec. 8.6
+  incomplete:
+
+    # noncompletion:
+    # -----------
+    # When a word is incomplete, but the intended meaning seems clear,
+    # insert the missing material within parentheses.
+    #   Values (bool):
+    #     true = keep complete form, remove parentheses
+    #     false = keep incomplete form, remove parentheses and content within
+    #   Default: true
+    noncompletion: true
+
+    # [TODO] omitted:
+    # -----------
+    # To code an omission, the `&=0` symbol is placed before a word/POS on the text tier.
+    #   Values (bool):
+    #     true = keep complete form, remove `&=0`
+    #     false = keep incomplete form, remove `&=0` and word after
+    #   Default: false
+    omitted: false
+
+  # unidentifiable:
+  # -----------
+  # Process the unidentifiable sound or group of sounds onto special tokens.
+  #   Refer To: Sec. 8.4
+  unidentifiable:
+
+    # unintelligible:
+    # -----------
+    # Use the symbol `xxx` when you cannot hear or understand what the speaker is saying.
+    #   Values (str): '<your_choice_of_unintelligible>'
+    #   Default: '<unk>'
+    unintelligible: '<unk>'
+
+    # phonological:
+    # -----------
+    # Use the symbol `yyy` when all materials are phonologically coded on a `%pho` line.
+    #   Values (str): '<your_choice_of_phonological>'
+    #   Default: '<unk>'
+    phonological: '<pho>'
+
+    # untranscribed:
+    # -----------
+    # Use the symbol `www` when a transcriber does not know how to transcribe or does not want to transcribe.
+    # This symbol must be used in conjunction with an `%exp` tier which is discussed
+    # in the chapter on dependent tiers.
+    #   Values (str): '<your_choice_of_untranscribed>'
+    #   Default: '<unk>'
+    untranscribed: '<unk>'
+
+  # scoped:
+  # -----------
+  # Process the paralinguistic and duration scoping
+  #   Refer To: Sec. 10.2
+  scoped:
+
+    # [TODO] stressed:
+    # -----------
+    # [!] with accompanying angle brackets to indicate that the phrase is stressed
+    # [!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
+    #   Values (bool):
+    #     true = keep stressed contents surrounded by special token
+    #     false = keep the original content, remove stressing symbols
+    #   Default: false
+    stressed: false
+
+
+# Dependent Tiers (%)
+# -----------
+# Dependent tiers are lines typed below the main line that contain
+# codes, comments, events, and descriptions of interest to the researcher.
+# All dependent tiers should begin with the percent symbol (%) and should be in lower­case letters.
+# See Sec. 11 in https://talkbank.org/manuals/CHAT.html#_Toc176356556
+dependent:
+
+  # keep_data: Controls dependent tier retention in output file
+  # -----------
+  #   Values (bool):
+  #     true = keep dependent tiers
+  #     false = remove dependent tiers
+  #   Default: true
+  keep_data: false
