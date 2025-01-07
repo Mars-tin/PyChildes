@@ -5,47 +5,10 @@ filtering lines that begin with asterisk (*) which typically denote speaker turn
 """
 
 import re
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 
 import yaml
-
-
-class DataIntegrityError(Exception):
-    """Exception raised for errors in the data integrity.
-
-    Args:
-        message: Explanation of the error.
-        data: The data that caused the integrity violation.
-
-    Attributes:
-        message: A string explaining the error.
-        data: The data that caused the integrity violation.
-    """
-
-    def __init__(
-        self,
-        message: str = 'Data integrity violation encountered.',
-        data: Optional[Any] = None,
-    ) -> None:
-        """Initialize the DataIntegrityError.
-
-        Args:
-            message: Explanation of the error. Defaults to generic message.
-            data: The data that caused the error. Defaults to None.
-        """
-        self.message = message
-        self.data = data
-        super().__init__(self.message)
-
-    def __str__(self) -> str:
-        """Create string representation of the error.
-
-        Returns:
-            String containing error message and optionally the problematic data.
-        """
-        if self.data:
-            return f'{self.message} Data: {self.data}'
-        return self.message
+from utils import DataIntegrityError
 
 
 class ChatConfig:
@@ -88,6 +51,82 @@ class ChatConfig:
 
         except yaml.YAMLError as e:
             raise yaml.YAMLError(f'Error parsing YAML configuration: {str(e)}')
+
+
+def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
+    """Process multiple paralinguistic markers in CHAT format utterances.
+
+    Args:
+        utterance: The utterance containing paralinguistic markers.
+
+    Returns:
+        The processed utterance with standardized event/explanation markup.
+    """
+    scope_cfg = config.utterance['scoped']
+
+    # Find all minimal regions with markers
+    # Capture the identifier in group 4
+    all_identifiers = ['=!', '=', '!', '!!']
+    all_identifiers = sorted(all_identifiers, key=len, reverse=True)
+    regions = re.finditer(
+        fr'(?:<([^>]+)>|(\S+))\s*\[\s*({"|".join(all_identifiers)})\s*(\w+)?\]',
+        utterance
+    )
+
+    # Process each match from end to start
+    replacements = []
+    for match in regions:
+        phrase_in_brackets, word, identifier, event = match.groups()
+        text = phrase_in_brackets if phrase_in_brackets else word
+        start, end = match.span()
+
+        if identifier == '=!':
+            tag = scope_cfg.get('paralinguistic', 'evt')
+            if tag != 'null':
+                replacements.append((
+                    start, end,
+                    f'<{tag}>{event}<sep>{text}</{tag}>'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
+
+        elif identifier == '=':
+            tag = scope_cfg.get('explanation', 'null')
+            if tag != 'null':
+                replacements.append((
+                    start, end,
+                    f'<{tag}>{event}<sep>{text}</{tag}>'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
+
+        elif identifier == '!':
+            assert event is None
+            tag = scope_cfg.get('stressing', 'stress')
+            if tag != 'null':
+                replacements.append((
+                    start, end,
+                    f'<{tag}>{text}</{tag}>'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
+
+        else:
+            replacements.append((
+                start, end, f'{text}'
+            ))
+
+    # Apply replacements from end to start
+    for start, end, replacement in sorted(replacements, reverse=True):
+        utterance = utterance[:start] + replacement + utterance[end:]
+
+    return utterance
 
 
 def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
@@ -151,10 +190,6 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     else:
         utterance = re.sub(r'&=0\w+', '', utterance)
 
-    # Process nonverbal token
-    marker = config.utterance.get('nonverbal', '<0>')
-    utterance = re.sub(r'0', marker, utterance)
-
     # Process unidentifiable markers
     unidentifiable = config.utterance['unidentifiable']
 
@@ -167,15 +202,15 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     marker = unidentifiable.get('untranscribed', '<unk>')
     utterance = re.sub(r'www', marker, utterance)
 
-    # Process scoped markers
-    scoped_markers = config.utterance['scoped']
-    for key, marker in scoped_markers.items():
+    # Process paralinguistic scope markers
+    utterance = process_paralinguistic(utterance, config)
 
-        # [TODO]: Handle angle brackets cases like `<take your shoes off> [!] .`
-        if key == 'stressed':
-            utterance = re.sub(r'\[!\]\s+(\S+)', r'<stress> \\1 </stress>', utterance)
+    # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
+    # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
 
-    utterance = re.sub(r'\[.*?\]\s*', '', utterance)
+    # Process nonverbal token
+    marker = config.utterance.get('nonverbal', '<0>')
+    utterance = re.sub(r'0', marker, utterance)
 
     return True, speaker + ' ' + utterance
 
@@ -271,5 +306,5 @@ if __name__ == '__main__':
     # Example usage
     input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
     output_file = 'prep/childes/output.cha'
-    config_path = 'configs/chat.yaml'
+    config_path = 'configs/example.yaml'
     process_cha_file(input_file, output_file, config_path)

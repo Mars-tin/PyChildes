@@ -121,15 +121,29 @@ utterance:
   #   Refer To: Sec. 10.2
   scoped:
 
-    # [TODO] stressed:
+    # paralinguistic:
+    # -----------
+    # Paralinguistic events, such as coughing, laughing, or yelling can be marked by using square brackets,
+    # the `=!` symbol, a space, and then text describing the event.
+    #   Values (str): 'null' or '<your_choice_of_paralinguistic>'
+    #   Default: 'evt' (angle brackets automatically apply if not null)
+    paralinguistic: 'evt'
+
+    # explanation:
+    # -----------
+    # The `=` symbol is used for brief explanations on the text tier.
+    # This symbol is helpful for specifying the deictic identity of objects and people.
+    #   Values (str): 'null' or '<your_choice_of_explanation>'
+    #   Default: 'null' (angle brackets automatically apply if not null)
+    explanation: 'null'
+
+    # stressing:
     # -----------
     # [!] with accompanying angle brackets to indicate that the phrase is stressed
     # [!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
-    #   Values (bool):
-    #     true = keep stressed contents surrounded by special token
-    #     false = keep the original content, remove stressing symbols
-    #   Default: false
-    stressed: false
+    #   Values (str): 'null' or '<your_choice_of_stressing>'
+    #   Default: 'stress' (angle brackets automatically apply if not null)
+    stressing: 'stress'
 
 
 # Dependent Tiers (%)
