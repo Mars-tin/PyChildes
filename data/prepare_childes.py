@@ -250,8 +250,8 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
         print(f'Successfully processed {input_file}')
         print(f'processed content written to {output_file}')
 
-    except FileNotFoundError:
-        print(f'Error: File {input_file} not found')
+    except FileNotFoundError as e:
+        print(f'Error: File error occurred: {str(e)}')
 
     except IOError as e:
         print(f'Error: IO error occurred: {str(e)}')

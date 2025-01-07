@@ -10,6 +10,8 @@ experiments/*
 data/*.zip
 data/*.train
 data/*.cha
+data/raw
+data/prep
 
 # User-specific files
 *.rsuser
