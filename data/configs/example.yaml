@@ -10,7 +10,7 @@
 # Headers (@)
 # -----------
 # A header is a line of text that gives information about the participants and the setting.
-# All headers begin with the “@” sign.
+# All headers begin with the '@' sign.
 # See Sec. 7 in https://talkbank.org/manuals/CHAT.html#_Toc176356502
 header:
 
@@ -26,7 +26,7 @@ header:
 
 # Utterances (*)
 # -----------
-# Lines beginning with * indicate what was actually said. These are called “main lines.”
+# Lines beginning with * indicate what was actually said. These are called 'main lines.'
 # Each main line/tier should code one and only one utterance.
 # When a speaker produces several utterances in a row, code each with a new main line.
 # The following arguments control the processing of main tiers.
@@ -86,6 +86,110 @@ utterance:
     #   Default: false
     omitted: false
 
+  # specform (@):
+  # -----------
+  # Special form markers are used to identify words and word-like forms that
+  # are not present in dictionaries or which have some special status.
+  # The markers are placed at the end of a word after the ampersand symbol `@`.
+  #   Refer To: Sec. 8.3
+  specform:
+
+    # babbling (@b):
+    # -----------
+    # Babbling can be used to mark both low-level early babbling.
+    # These forms have no obvious meaning and are used just to have fun with sound.
+    #   Values (str): '<your_choice_of_babbling>'
+    #   Default: '<unk>'
+    babbling: '<unk>'
+
+    # child_invented (@c):
+    # -----------
+    # Child-invented forms are words created by the child sometimes
+    # from other words without obvious derivational morphology.
+    #   Values (str): '<your_choice_of_child_invented>'
+    #   Default: '<unk>'
+    child_invented: '<unk>'
+
+    # dialect (@d):
+    # -----------
+    # Dialect form is often an interesting general property of a transcript.
+    #   Values (bool):
+    #     true = keep dialect
+    #     false = make it <unk>
+    #   Default: true
+    dialect: true
+
+    # family_spec (@f):
+    # -----------
+    # Family-specific forms are much like child-invented forms that have been taken over by the whole family.
+    #   Values (str): '<your_choice_of_family_specific>'
+    #   Default: '<unk>'
+    family_spec: '<unk>'
+
+    # filled_pause (@fp):
+    # -----------
+    # Family-specific forms are much like child-invented forms that have been taken over by the whole family.
+    #   Values (bool):
+    #     true = make it <unk>
+    #     false = remove filled pause
+    #   Default: false
+    filled_pause: false
+
+    # general (@g):
+    # -----------
+    # General special form marking with @g can be used when all of the above fail.
+    #   Values (bool):
+    #     true = make it <unk>
+    #     false = remove general
+    #   Default: false
+    general: false
+
+    # interjections (@i):
+    # -----------
+    # Interjections can be indicated in standard ways,
+    # making the use of the @i nota­tion usually not necessary.
+    #   Values (bool):
+    #     true = keep interjections
+    #     false = make it <unk>
+    #   Default: true
+    interjections: true
+
+    # multi_letters (@k):
+    # -----------
+    # Multiple letters or strings of letters are marked as @k (as in 'kana').
+    #   Values (bool):
+    #     true = keep letters
+    #     false = make it <unk>
+    #   Default: true
+    multi_letters: true
+
+    # letter (@l):
+    # -----------
+    # Letters can either be transcribed with the @l marker or simply as single-charac­ter words.
+    #   Values (bool):
+    #     true = keep letters
+    #     false = make it <unk>
+    #   Default: true
+    letter: true
+
+    # neologism (@n):
+    # -----------
+    # Neologisms are meant to refer to morphological coinages.
+    #   Values (bool):
+    #     true = mark the mistakes after with special token <neo>
+    #     false = remove it
+    #   Default: false
+    neologism: false
+
+    # onomatopoeia (@o):
+    # -----------
+    # Onomatopoeias include animal sounds and attempts to imitate natural sounds.
+    #   Values (bool):
+    #     true = keep onomatopoeia
+    #     false = make it <unk>
+    #   Default: true
+    onomatopoeia: true
+
   # unidentifiable:
   # -----------
   # Process the unidentifiable sound or group of sounds onto special tokens.
@@ -103,8 +207,8 @@ utterance:
     # -----------
     # Use the symbol `yyy` when all materials are phonologically coded on a `%pho` line.
     #   Values (str): '<your_choice_of_phonological>'
-    #   Default: '<unk>'
-    phonological: '<pho>'
+    #   Default: '<pho>'
+    phonological: '<unk>'
 
     # untranscribed:
     # -----------
