@@ -3,10 +3,15 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Experiment data files
+experiments/*
+
 # Corpus data files
 data/*.zip
 data/*.train
 data/*.cha
+data/raw
+data/prep
 
 # User-specific files
 *.rsuser
