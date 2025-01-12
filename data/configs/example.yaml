@@ -181,6 +181,36 @@ utterance:
     #   Default: false
     neologism: false
 
+    # pcf (@p):
+    # -----------
+    # Phonological consistent forms (PCFs) are early forms that are phonologically consis­tent,
+    # but whose meaning is unclear to the transcriber. Often these forms are protomorphemes.
+    #   Values (bool):
+    #     true = keep pcfs
+    #     false = make it <unk>
+    #   Default: false
+    pcf: false
+
+    # metaling (@q):
+    # -----------
+    # Quoting or Metalinguistic reference can be used to either cite
+    # or quote single standard words or special child forms.
+    #   Values (bool):
+    #     true = mark with quotation marks
+    #     false = simply keep the word
+    #   Default: false
+    metaling: false
+
+    # l2 (@s):
+    # -----------
+    # Second-language forms derive from some language not usually used in the home.
+    # These are marked with a second letter for the first letter of the second language.
+    #   Values (bool):
+    #     true = keep second language
+    #     false = make it <unk>
+    #   Default: true
+    l2: true
+
     # onomatopoeia (@o):
     # -----------
     # Onomatopoeias include animal sounds and attempts to imitate natural sounds.

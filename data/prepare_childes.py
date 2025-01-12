@@ -119,6 +119,24 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     else:
         utterance = re.sub(r'(\S+)@n\b', r'\1', utterance)
 
+    # pcf (@p)
+    if spec_form_cfg.get('pcf', False):
+        utterance = re.sub(r'(\S+)@p\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\S+@p\b', '<unk>', utterance)
+
+    # metaling (@q)
+    if spec_form_cfg.get('metaling', False):
+        utterance = re.sub(r'(\S+)@q\b', r'"\1"', utterance)
+    else:
+        utterance = re.sub(r'(\S+)@q\b', r'\1', utterance)
+
+    # second-language (@s)
+    if spec_form_cfg.get('l2', True):
+        utterance = re.sub(r'(\S+)@s[:$]\S+\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\S+@s[:$]\S+\b', '<unk>', utterance)
+
     # Onomatopoeias (@o)
     if spec_form_cfg.get('onomatopoeia', True):
         utterance = re.sub(r'(\S+)@o\b', lambda m: m.group(1).replace('_', ' '), utterance)
