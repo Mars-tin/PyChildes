@@ -455,6 +455,9 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # Process special forms
     utterance = process_special_form(utterance, config)
 
+    # Process disfluencies
+    utterance = process_disfluencies(utterance, config)
+
     # Process incomplete words
     utterance = process_incomplete(utterance, config)
 
