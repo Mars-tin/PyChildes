@@ -65,6 +65,38 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
         Utterance with special form markers replaced according to config settings
     """
     spec_form_cfg = config.utterance['specform']
+    env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+    pho_tag = config.utterance['unidentifiable'].get('phonological', '<pho>')
+
+    # singing (@si)
+    if spec_form_cfg.get('singing', True):
+        utterance = re.sub(
+            r'(\S+)@si\b',
+            f'<{env_tag}>sings<sep>' + r'\1' + f'</{env_tag}>',
+            utterance
+        )
+    else:
+        utterance = re.sub(r'(\S+)@si\b', r'\1', utterance)
+
+    # sign language (@sl)
+    if spec_form_cfg.get('sign', True):
+        utterance = re.sub(
+            r'(\S+)@sl\b',
+            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            utterance
+        )
+    else:
+        utterance = re.sub(r'(\S+)@sl\b', r'\1', utterance)
+
+    # sign and speech (@sas)
+    if spec_form_cfg.get('sas', True):
+        utterance = re.sub(
+            r'(\S+)@sl\b',
+            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            utterance
+        )
+    else:
+        utterance = re.sub(r'(\S+)@sl\b', r'\1', utterance)
 
     # Babbling (@b)
     marker = spec_form_cfg.get('babbling', '<unk>')
@@ -96,43 +128,43 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     else:
         utterance = re.sub(r'\S+@g\b', '', utterance)
 
-    # interjections (@i)
+    # Interjections (@i)
     if spec_form_cfg.get('interjections', True):
         utterance = re.sub(r'(\S+)@i\b', r'\1', utterance)
     else:
         utterance = re.sub(r'\S+@i\b', '<unk>', utterance)
 
-    # multi_letters (@k)
+    # Multi_letters (@k)
     if spec_form_cfg.get('multi_letters', True):
         utterance = re.sub(r'(\S+)@k\b', lambda m: ' '.join(m.group(1)).upper(), utterance)
     else:
         utterance = re.sub(r'\S+@k\b', '<unk>', utterance)
 
-    # letter (@l)
+    # Letter (@l)
     if spec_form_cfg.get('letter', True):
         utterance = re.sub(r'(\S+)@l\b', lambda m: m.group(1).upper(), utterance)
     else:
         utterance = re.sub(r'\S+@l\b', '<unk>', utterance)
 
-    # neologism (@n)
+    # Neologism (@n)
     if spec_form_cfg.get('neologism', False):
         utterance = re.sub(r'(\S+)@n\b', r'\1' + ' <neo>', utterance)
     else:
         utterance = re.sub(r'(\S+)@n\b', r'\1', utterance)
 
-    # pcf (@p)
+    # Phonological consistent forms (PCFs, @p)
     if spec_form_cfg.get('pcf', False):
         utterance = re.sub(r'(\S+)@p\b', r'\1', utterance)
     else:
         utterance = re.sub(r'\S+@p\b', '<unk>', utterance)
 
-    # metaling (@q)
+    # Metalinguistics (@q)
     if spec_form_cfg.get('metaling', False):
         utterance = re.sub(r'(\S+)@q\b', r'"\1"', utterance)
     else:
         utterance = re.sub(r'(\S+)@q\b', r'\1', utterance)
 
-    # second-language (@s)
+    # Second language (@s)
     if spec_form_cfg.get('l2', True):
         utterance = re.sub(r'(\S+)@s[:$]\S+\b', r'\1', utterance)
     else:
@@ -143,6 +175,28 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
         utterance = re.sub(r'(\S+)@o\b', lambda m: m.group(1).replace('_', ' '), utterance)
     else:
         utterance = re.sub(r'\S+@o\b', '<unk>', utterance)
+
+    # Test word (@t)
+    if spec_form_cfg.get('testword', True):
+        utterance = re.sub(r'(\S+)@t\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\S+@t\b', '<unk>', utterance)
+
+    # Unibet (@u)
+    if spec_form_cfg.get('unibet', False):
+        utterance = re.sub(r'(\S+)@u\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'(\S+)@u\b', pho_tag, utterance)
+
+    # Word Play (@wp)
+    marker = spec_form_cfg.get('wordplay', '<unk>')
+    utterance = re.sub(r'\S+@wp\b', marker, utterance)
+
+    # Excluded words (@x)
+    if spec_form_cfg.get('excluded', False):
+        utterance = re.sub(r'(\S+)@x\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'(\S+)@x\b', '<unk>', utterance)
 
     return utterance
 
