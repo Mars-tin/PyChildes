@@ -345,8 +345,19 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     all_identifiers = ['=!', '=', '!', '!!']
     all_identifiers = sorted(all_identifiers, key=len, reverse=True)
     regions = re.finditer(
-        fr'(?:<([^>]+)>|(\S+))\s*\[\s*({"|".join(all_identifiers)})\s*(\w+)?\]',
-        utterance
+        fr"""
+            (?:                            # Non-capturing group for alternatives
+                (?:<([^>]+)>|(\S+))\s*\[   # First alternative: <text> or word + [
+                |                          # OR
+                \[\s*                      # Second alternative: just [ with spaces
+            )
+            ({"|".join(all_identifiers)})  # The identifier (=!, =, etc)
+            \s*                            # Optional whitespace
+            (\w+[ \w]*)                    # Capture words with spaces
+            \]                             # Closing bracket
+        """,
+        utterance,
+        re.VERBOSE
     )
 
     # Process each match from end to start
