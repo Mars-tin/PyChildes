@@ -1,0 +1,297 @@
+# ==========================
+# Configuration for .cha file processing from Childes
+# ==========================
+# @schema: https://talkbank.org/manuals/CHAT.html
+# @version: 1.1.0
+# @description: Configuration schema for .cha processing pipeline
+# @required: ['header', 'utterance', 'dependent']
+
+
+# Headers (@)
+# -----------
+# A header is a line of text that gives information about the participants and the setting.
+# All headers begin with the '@' sign.
+# See Sec. 7 in https://talkbank.org/manuals/CHAT.html#_Toc176356502
+header:
+
+  # keep_data:
+  # -----------
+  # Controls header retention in output file
+  #   Values (bool):
+  #     true = keep headers
+  #     false = remove headers
+  #   Default: false
+  keep_data: false
+
+
+# Utterances (*)
+# -----------
+# Lines beginning with * indicate what was actually said. These are called 'main lines.'
+# Each main line/tier should code one and only one utterance.
+# When a speaker produces several utterances in a row, code each with a new main line.
+# The following arguments control the processing of main tiers.
+utterance:
+
+  # keep_data:
+  # -----------
+  # Controls utterance retention in output file.
+  #   Values (bool):
+  #     true = keep utterances
+  #     false = remove utterances
+  #   Default: true
+  keep_data: true
+
+  # keep_speaker:
+  # -----------
+  # Controls speaker token retention in output file.
+  #   Refer To: Sec. 5.1.7
+  #   Values (bool):
+  #     true = keep speaker tokens
+  #     false = remove speaker tokens
+  #   Default: true
+  keep_speaker: true
+
+  # nonverbal:
+  # -----------
+  # Process the `0` symbol to mark cases where only one form is used.
+  # In the main lines, it is usually used to indicate that there is an action but no speech.
+  #   Refer To: Sec. 16.4
+  #   Values (str): '<your_choice_of_silence_token>'
+  #   Default: '<0>'
+  nonverbal: '<0>'
+
+  # incomplete:
+  # -----------
+  # Process the incomplete and omitted words.
+  # In the main lines, words may also be incomplete or even fully omitted.
+  #   Refer To: Sec. 8.6
+  incomplete:
+
+    # noncompletion:
+    # -----------
+    # When a word is incomplete, but the intended meaning seems clear,
+    # insert the missing material within parentheses.
+    #   Values (bool):
+    #     true = keep complete form, remove parentheses
+    #     false = keep incomplete form, remove parentheses and content within
+    #   Default: true
+    noncompletion: true
+
+    # [TODO] omitted:
+    # -----------
+    # To code an omission, the `&=0` symbol is placed before a word/POS on the text tier.
+    #   Values (bool):
+    #     true = keep complete form, remove `&=0`
+    #     false = keep incomplete form, remove `&=0` and word after
+    #   Default: false
+    omitted: false
+
+  # specform (@):
+  # -----------
+  # Special form markers are used to identify words and word-like forms that
+  # are not present in dictionaries or which have some special status.
+  # The markers are placed at the end of a word after the ampersand symbol `@`.
+  #   Refer To: Sec. 8.3
+  specform:
+
+    # babbling (@b):
+    # -----------
+    # Babbling can be used to mark both low-level early babbling.
+    # These forms have no obvious meaning and are used just to have fun with sound.
+    #   Values (str): '<your_choice_of_babbling>'
+    #   Default: '<unk>'
+    babbling: '<unk>'
+
+    # child_invented (@c):
+    # -----------
+    # Child-invented forms are words created by the child sometimes
+    # from other words without obvious derivational morphology.
+    #   Values (str): '<your_choice_of_child_invented>'
+    #   Default: '<unk>'
+    child_invented: '<unk>'
+
+    # dialect (@d):
+    # -----------
+    # Dialect form is often an interesting general property of a transcript.
+    #   Values (bool):
+    #     true = keep dialect
+    #     false = make it <unk>
+    #   Default: true
+    dialect: true
+
+    # family_spec (@f):
+    # -----------
+    # Family-specific forms are much like child-invented forms that have been taken over by the whole family.
+    #   Values (str): '<your_choice_of_family_specific>'
+    #   Default: '<unk>'
+    family_spec: '<unk>'
+
+    # filled_pause (@fp):
+    # -----------
+    # Family-specific forms are much like child-invented forms that have been taken over by the whole family.
+    #   Values (bool):
+    #     true = make it <unk>
+    #     false = remove filled pause
+    #   Default: false
+    filled_pause: false
+
+    # general (@g):
+    # -----------
+    # General special form marking with @g can be used when all of the above fail.
+    #   Values (bool):
+    #     true = make it <unk>
+    #     false = remove general
+    #   Default: false
+    general: false
+
+    # interjections (@i):
+    # -----------
+    # Interjections can be indicated in standard ways,
+    # making the use of the @i nota­tion usually not necessary.
+    #   Values (bool):
+    #     true = keep interjections
+    #     false = make it <unk>
+    #   Default: true
+    interjections: true
+
+    # multi_letters (@k):
+    # -----------
+    # Multiple letters or strings of letters are marked as @k (as in 'kana').
+    #   Values (bool):
+    #     true = keep letters
+    #     false = make it <unk>
+    #   Default: true
+    multi_letters: true
+
+    # letter (@l):
+    # -----------
+    # Letters can either be transcribed with the @l marker or simply as single-charac­ter words.
+    #   Values (bool):
+    #     true = keep letters
+    #     false = make it <unk>
+    #   Default: true
+    letter: true
+
+    # neologism (@n):
+    # -----------
+    # Neologisms are meant to refer to morphological coinages.
+    #   Values (bool):
+    #     true = mark the mistakes after with special token <neo>
+    #     false = remove it
+    #   Default: false
+    neologism: false
+
+    # pcf (@p):
+    # -----------
+    # Phonological consistent forms (PCFs) are early forms that are phonologically consis­tent,
+    # but whose meaning is unclear to the transcriber. Often these forms are protomorphemes.
+    #   Values (bool):
+    #     true = keep pcfs
+    #     false = make it <unk>
+    #   Default: false
+    pcf: false
+
+    # metaling (@q):
+    # -----------
+    # Quoting or Metalinguistic reference can be used to either cite
+    # or quote single standard words or special child forms.
+    #   Values (bool):
+    #     true = mark with quotation marks
+    #     false = simply keep the word
+    #   Default: false
+    metaling: false
+
+    # l2 (@s):
+    # -----------
+    # Second-language forms derive from some language not usually used in the home.
+    # These are marked with a second letter for the first letter of the second language.
+    #   Values (bool):
+    #     true = keep second language
+    #     false = make it <unk>
+    #   Default: true
+    l2: true
+
+    # onomatopoeia (@o):
+    # -----------
+    # Onomatopoeias include animal sounds and attempts to imitate natural sounds.
+    #   Values (bool):
+    #     true = keep onomatopoeia
+    #     false = make it <unk>
+    #   Default: true
+    onomatopoeia: true
+
+  # unidentifiable:
+  # -----------
+  # Process the unidentifiable sound or group of sounds onto special tokens.
+  #   Refer To: Sec. 8.4
+  unidentifiable:
+
+    # unintelligible:
+    # -----------
+    # Use the symbol `xxx` when you cannot hear or understand what the speaker is saying.
+    #   Values (str): '<your_choice_of_unintelligible>'
+    #   Default: '<unk>'
+    unintelligible: '<unk>'
+
+    # phonological:
+    # -----------
+    # Use the symbol `yyy` when all materials are phonologically coded on a `%pho` line.
+    #   Values (str): '<your_choice_of_phonological>'
+    #   Default: '<pho>'
+    phonological: '<unk>'
+
+    # untranscribed:
+    # -----------
+    # Use the symbol `www` when a transcriber does not know how to transcribe or does not want to transcribe.
+    # This symbol must be used in conjunction with an `%exp` tier which is discussed
+    # in the chapter on dependent tiers.
+    #   Values (str): '<your_choice_of_untranscribed>'
+    #   Default: '<unk>'
+    untranscribed: '<unk>'
+
+  # scoped:
+  # -----------
+  # Process the paralinguistic and duration scoping
+  #   Refer To: Sec. 10.2
+  scoped:
+
+    # paralinguistic:
+    # -----------
+    # Paralinguistic events, such as coughing, laughing, or yelling can be marked by using square brackets,
+    # the `=!` symbol, a space, and then text describing the event.
+    #   Values (str): 'null' or '<your_choice_of_paralinguistic>'
+    #   Default: 'evt' (angle brackets automatically apply if not null)
+    paralinguistic: 'evt'
+
+    # explanation:
+    # -----------
+    # The `=` symbol is used for brief explanations on the text tier.
+    # This symbol is helpful for specifying the deictic identity of objects and people.
+    #   Values (str): 'null' or '<your_choice_of_explanation>'
+    #   Default: 'null' (angle brackets automatically apply if not null)
+    explanation: 'null'
+
+    # stressing:
+    # -----------
+    # [!] with accompanying angle brackets to indicate that the phrase is stressed
+    # [!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
+    #   Values (str): 'null' or '<your_choice_of_stressing>'
+    #   Default: 'stress' (angle brackets automatically apply if not null)
+    stressing: 'stress'
+
+
+# Dependent Tiers (%)
+# -----------
+# Dependent tiers are lines typed below the main line that contain
+# codes, comments, events, and descriptions of interest to the researcher.
+# All dependent tiers should begin with the percent symbol (%) and should be in lower­case letters.
+# See Sec. 11 in https://talkbank.org/manuals/CHAT.html#_Toc176356556
+dependent:
+
+  # keep_data: Controls dependent tier retention in output file
+  # -----------
+  #   Values (bool):
+  #     true = keep dependent tiers
+  #     false = remove dependent tiers
+  #   Default: true
+  keep_data: false

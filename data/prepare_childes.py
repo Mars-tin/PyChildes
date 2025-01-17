@@ -6,47 +6,10 @@ filtering lines that begin with asterisk (*) which typically denote speaker turn
 
 import os
 import re
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 
 import yaml
-
-
-class DataIntegrityError(Exception):
-    """Exception raised for errors in the data integrity.
-
-    Args:
-        message: Explanation of the error.
-        data: The data that caused the integrity violation.
-
-    Attributes:
-        message: A string explaining the error.
-        data: The data that caused the integrity violation.
-    """
-
-    def __init__(
-        self,
-        message: str = 'Data integrity violation encountered.',
-        data: Optional[Any] = None,
-    ) -> None:
-        """Initialize the DataIntegrityError.
-
-        Args:
-            message: Explanation of the error. Defaults to generic message.
-            data: The data that caused the error. Defaults to None.
-        """
-        self.message = message
-        self.data = data
-        super().__init__(self.message)
-
-    def __str__(self) -> str:
-        """Create string representation of the error.
-
-        Returns:
-            String containing error message and optionally the problematic data.
-        """
-        if self.data:
-            return f'{self.message} Data: {self.data}'
-        return self.message
+from utils import DataIntegrityError
 
 
 class ChatConfig:
@@ -89,6 +52,235 @@ class ChatConfig:
 
         except yaml.YAMLError as e:
             raise yaml.YAMLError(f'Error parsing YAML configuration: {str(e)}')
+
+
+def process_special_form(utterance: str, config: ChatConfig) -> str:
+    """Process special form markers in CHAT format transcripts.
+
+    Args:
+        utterance: Raw utterance text containing special form markers
+        config: Configuration object with special form speech settings
+
+    Returns:
+        Utterance with special form markers replaced according to config settings
+    """
+    spec_form_cfg = config.utterance['specform']
+
+    # Babbling (@b)
+    marker = spec_form_cfg.get('babbling', '<unk>')
+    utterance = re.sub(r'\S+@b\b', marker, utterance)
+
+    # Child-invented forms (@c)
+    marker = spec_form_cfg.get('child_invented', '<unk>')
+    utterance = re.sub(r'\S+@c\b', marker, utterance)
+
+    # Dialect form (@d)
+    if spec_form_cfg.get('dialect', True):
+        utterance = re.sub(r'(\S+)@d\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\S+@d\b', '<unk>', utterance)
+
+    # Filled pause (@fp)
+    if spec_form_cfg.get('filled_pause', False):
+        utterance = re.sub(r'\S+@fp\b', '<unk>', utterance)
+    else:
+        utterance = re.sub(r'\S+@fp\b', '', utterance)
+
+    # Family-specific forms (@f)
+    marker = spec_form_cfg.get('family_spec', '<unk>')
+    utterance = re.sub(r'\S+@f\b', marker, utterance)
+
+    # General special form (@g)
+    if spec_form_cfg.get('general', False):
+        utterance = re.sub(r'\S+@g\b', '<unk>', utterance)
+    else:
+        utterance = re.sub(r'\S+@g\b', '', utterance)
+
+    # interjections (@i)
+    if spec_form_cfg.get('interjections', True):
+        utterance = re.sub(r'(\S+)@i\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\S+@i\b', '<unk>', utterance)
+
+    # multi_letters (@k)
+    if spec_form_cfg.get('multi_letters', True):
+        utterance = re.sub(r'(\S+)@k\b', lambda m: ' '.join(m.group(1)).upper(), utterance)
+    else:
+        utterance = re.sub(r'\S+@k\b', '<unk>', utterance)
+
+    # letter (@l)
+    if spec_form_cfg.get('letter', True):
+        utterance = re.sub(r'(\S+)@l\b', lambda m: m.group(1).upper(), utterance)
+    else:
+        utterance = re.sub(r'\S+@l\b', '<unk>', utterance)
+
+    # neologism (@n)
+    if spec_form_cfg.get('neologism', False):
+        utterance = re.sub(r'(\S+)@n\b', r'\1' + ' <neo>', utterance)
+    else:
+        utterance = re.sub(r'(\S+)@n\b', r'\1', utterance)
+
+    # pcf (@p)
+    if spec_form_cfg.get('pcf', False):
+        utterance = re.sub(r'(\S+)@p\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\S+@p\b', '<unk>', utterance)
+
+    # metaling (@q)
+    if spec_form_cfg.get('metaling', False):
+        utterance = re.sub(r'(\S+)@q\b', r'"\1"', utterance)
+    else:
+        utterance = re.sub(r'(\S+)@q\b', r'\1', utterance)
+
+    # second-language (@s)
+    if spec_form_cfg.get('l2', True):
+        utterance = re.sub(r'(\S+)@s[:$]\S+\b', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\S+@s[:$]\S+\b', '<unk>', utterance)
+
+    # Onomatopoeias (@o)
+    if spec_form_cfg.get('onomatopoeia', True):
+        utterance = re.sub(r'(\S+)@o\b', lambda m: m.group(1).replace('_', ' '), utterance)
+    else:
+        utterance = re.sub(r'\S+@o\b', '<unk>', utterance)
+
+    return utterance
+
+
+def process_unidentifiable(utterance: str, config: ChatConfig) -> str:
+    """Process unidentifiable markers in CHAT format transcripts.
+
+    Handles three types of unidentifiable content markers:
+    1. xxx: Unintelligible speech
+    2. yyy: Phonologically unclear speech
+    3. www: Untranscribed speech
+
+    Args:
+        utterance: Raw utterance text containing unidentifiable markers
+        config: Configuration object with unidentifiable speech settings
+
+    Returns:
+        Utterance with unidentifiable markers replaced according to config settings
+    """
+    unid_cfg = config.utterance['unidentifiable']
+
+    marker = unid_cfg.get('unintelligible', '<unk>')
+    utterance = re.sub(r'xxx', marker, utterance)
+
+    marker = unid_cfg.get('phonological', '<unk>')
+    utterance = re.sub(r'yyy', marker, utterance)
+
+    marker = unid_cfg.get('untranscribed', '<unk>')
+    utterance = re.sub(r'www', marker, utterance)
+
+    return utterance
+
+
+def process_incomplete(utterance: str, config: ChatConfig) -> str:
+    """Process incomplete utterance markers in CHAT format transcripts.
+
+    Handles two types of incomplete markers:
+    1. Noncompletion markers: Text within parentheses ()
+    2. Omitted word markers: &=0 followed by optional POS tag
+
+    Args:
+        utterance: Raw utterance text containing incomplete markers
+        config: Configuration object with incomplete utterance settings
+
+    Returns:
+        Utterance with incomplete markers processed according to config settings
+    """
+    incomplete_cfg = config.utterance['incomplete']
+
+    if incomplete_cfg.get('noncompletion', True):
+        utterance = re.sub(r'\((.+?)\)', r'\1', utterance)
+    else:
+        utterance = re.sub(r'\(.*?\)\s*', '', utterance)
+
+    # [TODO]: Create special handles for `&=0` + POS, e.g., `&=0det`.
+    if incomplete_cfg.get('omitted', True):
+        utterance = re.sub(r'&=0', '', utterance)
+    else:
+        utterance = re.sub(r'&=0\w+', '', utterance)
+
+    return utterance
+
+
+def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
+    """Process multiple paralinguistic markers in CHAT format utterances.
+
+    Args:
+        utterance: The utterance containing paralinguistic markers.
+        config: Configuration object with paralinguistic utterance settings
+
+    Returns:
+        The processed utterance with standardized event/explanation markup.
+    """
+    scope_cfg = config.utterance['scoped']
+
+    # Find all minimal regions with markers
+    # Capture the identifier in group 4
+    all_identifiers = ['=!', '=', '!', '!!']
+    all_identifiers = sorted(all_identifiers, key=len, reverse=True)
+    regions = re.finditer(
+        fr'(?:<([^>]+)>|(\S+))\s*\[\s*({"|".join(all_identifiers)})\s*(\w+)?\]',
+        utterance
+    )
+
+    # Process each match from end to start
+    replacements = []
+    for match in regions:
+        phrase_in_brackets, word, identifier, event = match.groups()
+        text = phrase_in_brackets if phrase_in_brackets else word
+        start, end = match.span()
+
+        if identifier == '=!':
+            tag = scope_cfg.get('paralinguistic', 'evt')
+            if tag != 'null':
+                replacements.append((
+                    start, end,
+                    f'<{tag}>{event}<sep>{text}</{tag}>'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
+
+        elif identifier == '=':
+            tag = scope_cfg.get('explanation', 'null')
+            if tag != 'null':
+                replacements.append((
+                    start, end,
+                    f'<{tag}>{event}<sep>{text}</{tag}>'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
+
+        elif identifier == '!':
+            assert event is None
+            tag = scope_cfg.get('stressing', 'stress')
+            if tag != 'null':
+                replacements.append((
+                    start, end,
+                    f'<{tag}>{text}</{tag}>'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
+
+        else:
+            replacements.append((
+                start, end, f'{text}'
+            ))
+
+    # Apply replacements from end to start
+    for start, end, replacement in sorted(replacements, reverse=True):
+        utterance = utterance[:start] + replacement + utterance[end:]
+
+    return utterance
 
 
 def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
@@ -138,39 +330,24 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     if config.utterance.get('keep_speaker', True):
         speaker = '<' + speaker_id[1:] + '>'
 
+    # Process special forms
+    utterance = process_special_form(utterance, config)
+
     # Process incomplete words
-    incomplete = config.utterance['incomplete']
+    utterance = process_incomplete(utterance, config)
 
-    if incomplete.get('noncompletion', True):
-        utterance = re.sub(r'\((.+?)\)', r'\1', utterance)
-    else:
-        utterance = re.sub(r'\(.*?\)\s*', '', utterance)
+    # Process unidentifiable markers
+    utterance = process_unidentifiable(utterance, config)
 
-    if incomplete.get('omitted', True):
-        utterance = re.sub(r'&=0', '', utterance)
-    else:
-        utterance = re.sub(r'&=0\w+', '', utterance)
+    # Process paralinguistic scope markers
+    utterance = process_paralinguistic(utterance, config)
+
+    # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
+    # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
 
     # Process nonverbal token
     marker = config.utterance.get('nonverbal', '<0>')
     utterance = re.sub(r'0', marker, utterance)
-
-    # Process unidentifiable markers
-    unidentifiable = config.utterance['unidentifiable']
-
-    marker = unidentifiable.get('unintelligible', '<unk>')
-    utterance = re.sub(r'xxx', marker, utterance)
-
-    marker = unidentifiable.get('phonological', '<unk>')
-    utterance = re.sub(r'yyy', marker, utterance)
-
-    # Process scoped markers
-    scoped_markers = config.utterance['scoped']
-    for key, marker in scoped_markers.items():
-        if key == 'stressed':
-            utterance = re.sub(r'\[!\]\s+(\S+)', r'<stress> \\1 </stress>', utterance)
-
-    utterance = re.sub(r'\[.*?\]\s*', '', utterance)
 
     return True, speaker + ' ' + utterance
 
@@ -269,5 +446,5 @@ if __name__ == '__main__':
     # Example usage
     input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
     output_file = 'prep/childes/output.cha'
-    config_path = 'configs/chat.yaml'
+    config_path = 'configs/example.yaml'
     process_cha_file(input_file, output_file, config_path)

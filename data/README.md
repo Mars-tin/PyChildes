@@ -4,6 +4,8 @@ Start by creating two sub-directories: `raw/` and `prep/` in `data/`.
 ```bash
 mkdir raw
 mkdir prep
+mkdir raw/childes
+mkdir prep/childes
 ```
 
 ## Corpora for Cognitive Inquiry
