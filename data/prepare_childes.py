@@ -4,6 +4,7 @@ This module provides functionality to process CHAT format files, specifically
 filtering lines that begin with asterisk (*) which typically denote speaker turns.
 """
 
+import os
 import re
 from typing import Optional, Tuple
 
@@ -394,10 +395,13 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
         DataIntegrityError: If the input file contains data integrity violations.
     """
     try:
-
         with open(input_file, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
+    except FileNotFoundError:
+        print(f'Input file not found: {input_file}')
+
+    try:
         config = ChatConfig(config_path)
 
         processed_lines = []
@@ -421,20 +425,20 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
             if keep_data:
                 processed_lines.append(line)
 
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, 'w', encoding='utf-8') as f:
             f.writelines(processed_lines)
 
         print(f'Successfully processed {input_file}')
         print(f'processed content written to {output_file}')
 
-    except FileNotFoundError as e:
-        print(f'Error: File error occurred: {str(e)}')
-
     except IOError as e:
         print(f'Error: IO error occurred: {str(e)}')
+        raise e
 
     except DataIntegrityError as e:
         print(f'Error: {str(e)}')
+        raise e
 
 
 if __name__ == '__main__':
