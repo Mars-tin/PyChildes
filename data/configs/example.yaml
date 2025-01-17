@@ -293,21 +293,21 @@ utterance:
   #   Refer To: Sec. 8.4
   unidentifiable:
 
-    # unintelligible:
+    # unintelligible (xxx):
     # -----------
     # Use the symbol `xxx` when you cannot hear or understand what the speaker is saying.
     #   Values (str): '<your_choice_of_unintelligible>'
     #   Default: '<unk>'
     unintelligible: '<unk>'
 
-    # phonological:
+    # phonological (yyy):
     # -----------
     # Use the symbol `yyy` when all materials are phonologically coded on a `%pho` line.
     #   Values (str): '<your_choice_of_phonological>'
     #   Default: '<pho>'
     phonological: '<unk>'
 
-    # untranscribed:
+    # untranscribed (www):
     # -----------
     # Use the symbol `www` when a transcriber does not know how to transcribe or does not want to transcribe.
     # This symbol must be used in conjunction with an `%exp` tier which is discussed
@@ -322,7 +322,7 @@ utterance:
   #   Refer To: Sec. 8.5
   disfluency:
 
-    # fragment:
+    # fragment (&+):
     # -----------
     # Phonological fragments are marked with &+.
     #   Values (str):
@@ -332,7 +332,7 @@ utterance:
     #   Default: 'null'
     fragment: 'null'
 
-    # filler:
+    # filler (&-):
     # -----------
     # Fillers such as uh should be coded as &-uh. For English,
     # this code should be used for all cases of &-um, &-uh, &-er, and &-eh.
@@ -343,7 +343,7 @@ utterance:
     #   Default: 'keep'
     filler: 'keep'
 
-    # nonwords:
+    # nonwords (&~):
     # -----------
     # Fillers such as uh should be coded as &-uh. For English,
     # this code should be used for all cases of &-um, &-uh, &-er, and &-eh.
@@ -360,7 +360,7 @@ utterance:
   #   Refer To: Sec. 10.2
   scoped:
 
-    # paralinguistic:
+    # paralinguistic ([=!]):
     # -----------
     # Paralinguistic events, such as coughing, laughing, or yelling can be marked by using square brackets,
     # the `=!` symbol, a space, and then text describing the event.
@@ -368,7 +368,7 @@ utterance:
     #   Default: 'evt' (angle brackets automatically apply if not null)
     paralinguistic: 'evt'
 
-    # explanation:
+    # explanation ([=] and [%]):
     # -----------
     # The `=` symbol is used for brief explanations on the text tier.
     # This symbol is helpful for specifying the deictic identity of objects and people.
@@ -376,7 +376,18 @@ utterance:
     #   Default: 'null' (angle brackets automatically apply if not null)
     explanation: 'exp'
 
-    # stressing:
+    # replacement ([:] amd [::]):
+    # -----------
+    # Earlier we discussed the use of a variety of nonstandard forms such as "gonna" and “hafta.".
+    # In order for MOR to morphemicize such words, the transcriber can use a replacement symbol that allows
+    # CLAN to substitute a target language form for the form ac­tually produced.
+    #   Values (bool):
+    #     true = keep corrected form
+    #     false = keep original form
+    #   Default: false
+    replacement: true
+
+    # stressing ([!]):
     # -----------
     # [!] with accompanying angle brackets to indicate that the phrase is stressed
     # [!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
@@ -384,7 +395,7 @@ utterance:
     #   Default: 'stress' (angle brackets automatically apply if not null)
     stressing: 'stress'
 
-    # contra_stressing:
+    # contra_stressing ([!!]):
     # -----------
     # [!!] with accompanying angle brackets to indicate that the phrase is stressed
     # [!!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
@@ -392,6 +403,14 @@ utterance:
     #   Default: 'stress' (angle brackets automatically apply if not null)
     contra_stressing: 'stress'
 
+    # alternative ([=?]):
+    # -----------
+    # Sometimes it is difficult to choose between two possible transcriptions for a word or group of words.
+    #   Values (bool):
+    #     true = keep alternative form
+    #     false = keep original form
+    #   Default: false
+    alternative: false
 
 # Dependent Tiers (%)
 # -----------

@@ -344,20 +344,26 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
     # Find all minimal regions with markers
     # Capture the identifier in group 4
-    all_identifiers = ['=!', '=', '!!', '!']
+    all_identifiers = ['=!', '=?', '=', '!!', '!', '#', ':', '::', '%', '?']
     all_identifiers = sorted(all_identifiers, key=len, reverse=True)
     regions = re.finditer(
-        fr"""(?:                          # Start main non-capturing group
-                (?:<([^>]+)>|(\S+))\s*\[  # Match <text> or word followed by [
-                |                         # OR
-                \[\s*                     # Just [ with optional whitespace
-            )                             # End main non-capturing group
-            ({"|".join(re.escape(i) for i in all_identifiers)}) # Match identifiers with escaped special chars
-            \s*                           # Optional whitespace
-            (\w+[ \w]*)?                  # Words with possible spaces, now optional with ?
-            \]""",                        # Closing bracket
-        utterance,
-        re.VERBOSE
+        (
+            # Match either bracketed text in <...> or single word without spaces
+            r"""(?:<([^>]+)>|(\S+))""" +
+
+            # Match optional whitespace followed by opening square bracket
+            r"""\s*\[""" +
+
+            # Match one of the special identifiers (=!, =, !!, etc)
+            fr"""({"|".join(re.escape(i) for i in all_identifiers)})""" +
+
+            # Match optional whitespace followed by any text until closing bracket
+            r"""\s*([^\]]*)?""" +
+
+            # Match closing square bracket
+            r"""\]"""
+        ),
+        utterance
     )
 
     # Process each match from end to start
@@ -380,8 +386,19 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                     start, end, f'{text}'
                 ))
 
-        # Explanation (10.3)
-        elif identifier == '=':
+        # Alternative Transcription (10.3)
+        elif identifier == '=?':
+            if scope_cfg.get('alternative', False):
+                replacements.append((
+                    start, end, f'{event}'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
+
+        # Explanation and Comment (10.3)
+        elif identifier == '=' or identifier == '%':
             tag = scope_cfg.get('explanation', 'null')
             if tag != 'null':
                 replacements.append((
@@ -395,7 +412,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
         # Contrastive Stressing (10.2)
         elif identifier == '!!':
-            assert event is None
+            assert (event is None) or (event == '')
             tag = scope_cfg.get('contra_stressing', 'stress')
             if tag != 'null':
                 replacements.append((
@@ -409,7 +426,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
         # Stressing (10.2)
         elif identifier == '!':
-            assert event is None
+            assert (event is None) or (event == '')
             tag = scope_cfg.get('stressing', 'stress')
             if tag != 'null':
                 replacements.append((
@@ -424,24 +441,32 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
         # Duration (10.2)
         # TODO: For now we just remove duration marks
         elif identifier == '#':
-            print(phrase_in_brackets, word, identifier, event)
             replacements.append((
                 start, end, f'{text}'
             ))
+
+        # Best Guess (10.3)
+        # TODO: For now we just remove guess marks
+        elif identifier == '?':
+            replacements.append((
+                start, end, f'{text}'
+            ))
+
+        # Replacement (of Real Word) (10.3)
+        elif identifier == ':' or identifier == '::':
+            if scope_cfg.get('replacement', True):
+                replacements.append((
+                    start, end, f'{event}'
+                ))
+            else:
+                replacements.append((
+                    start, end, f'{text}'
+                ))
 
         else:
             replacements.append((
                 start, end, f'{text}'
             ))
-
-    # Duration (10.2)
-    # Needs special handler as # is a special token in re.VERBOSE
-    # TODO: For now we just remove duration marks
-    duration_pt = re.compile(r'(?:<([^>]+)>|(\w+))\s*\[#\s*[\d.]+\]')
-    for match in duration_pt.finditer(utterance):
-        start, end = match.start(), match.end()
-        text = match.group(1) if match.group(1) is not None else match.group(2)
-        replacements.append((start, end, f'{text}'))
 
     # Apply replacements from end to start
     for start, end, replacement in sorted(replacements, reverse=True):
