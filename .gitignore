@@ -13,6 +13,9 @@ data/**/*.cha
 data/raw/
 data/prep
 
+# Development software files 
+.vscode/
+
 # User-specific files
 *.rsuser
 *.suo
