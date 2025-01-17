@@ -374,7 +374,7 @@ utterance:
     # This symbol is helpful for specifying the deictic identity of objects and people.
     #   Values (str): 'null' or '<your_choice_of_explanation>'
     #   Default: 'null' (angle brackets automatically apply if not null)
-    explanation: 'null'
+    explanation: 'exp'
 
     # stressing:
     # -----------
@@ -383,6 +383,14 @@ utterance:
     #   Values (str): 'null' or '<your_choice_of_stressing>'
     #   Default: 'stress' (angle brackets automatically apply if not null)
     stressing: 'stress'
+
+    # contra_stressing:
+    # -----------
+    # [!!] with accompanying angle brackets to indicate that the phrase is stressed
+    # [!!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
+    #   Values (str): 'null' or '<your_choice_of_stressing>'
+    #   Default: 'stress' (angle brackets automatically apply if not null)
+    contra_stressing: 'stress'
 
 
 # Dependent Tiers (%)
