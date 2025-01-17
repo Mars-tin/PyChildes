@@ -316,6 +316,44 @@ utterance:
     #   Default: '<unk>'
     untranscribed: '<unk>'
 
+  # disfluency:
+  # -----------
+  # Process the elements interrupt the smooth, fluent flow of language.
+  #   Refer To: Sec. 8.5
+  disfluency:
+
+    # fragment:
+    # -----------
+    # Phonological fragments are marked with &+.
+    #   Values (str):
+    #     'keep' = keep phonological fragments
+    #     'unk' = mark it as <unk>
+    #     'null' = remove the term
+    #   Default: 'null'
+    fragment: 'null'
+
+    # filler:
+    # -----------
+    # Fillers such as uh should be coded as &-uh. For English,
+    # this code should be used for all cases of &-um, &-uh, &-er, and &-eh.
+    #   Values (str):
+    #     'keep' = keep phonological filler
+    #     'unk' = mark it as <unk>
+    #     'null' = remove the term
+    #   Default: 'keep'
+    filler: 'keep'
+
+    # nonwords:
+    # -----------
+    # Fillers such as uh should be coded as &-uh. For English,
+    # this code should be used for all cases of &-um, &-uh, &-er, and &-eh.
+    #   Values (str):
+    #     'keep' = keep phonological filler
+    #     'unk' = mark it as <unk>
+    #     'null' = remove the term
+    #   Default: 'unk'
+    nonwords: 'unk'
+
   # scoped:
   # -----------
   # Process the paralinguistic and duration scoping

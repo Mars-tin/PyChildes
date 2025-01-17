@@ -230,6 +230,74 @@ def process_unidentifiable(utterance: str, config: ChatConfig) -> str:
     return utterance
 
 
+def process_disfluencies(utterance: str, config: ChatConfig) -> str:
+    """Process disfluency markers in CHAT format transcripts.
+
+    Handles three types of disfluency markers:
+    1. &+ : Phonological fragments (e.g., "&+sn dog")
+    2. &- : Phonological fillers (e.g., "&-uh cat")
+    3. &~ : Nonwords (e.g., "&~meowmeow pet")
+
+    Args:
+        utterance: Raw utterance text containing disfluency markers
+        config: Configuration object with disfluency settings:
+            - disfluency.fragment: How to handle &+ markers
+            - disfluency.filler: How to handle &- markers
+            - disfluency.nonwords: How to handle &~ markers
+
+    Returns:
+        Utterance with disfluency markers processed according to config settings
+
+    Raises:
+        DataIntegrityError: If config contains invalid handling option
+    """
+    disfluencies_cfg = config.utterance['disfluency']
+
+    # Phonological Fragments (&+)
+    handle = disfluencies_cfg.get('fragment', 'null')
+    if handle == 'null':
+        utterance = re.sub(r'&\+\S+\s+', '', utterance)
+    elif handle == 'keep':
+        utterance = re.sub(r'&\+(\S+\s+)', r'\1', utterance)
+    elif handle == 'unk':
+        utterance = re.sub(r'&\+\S+', '<unk>', utterance)
+    else:
+        raise DataIntegrityError(
+            f'Invalid config format for "fragment": {disfluencies_cfg}',
+            disfluencies_cfg
+        )
+
+    # Phonological Fillers (&-)
+    handle = disfluencies_cfg.get('filler', 'null')
+    if handle == 'null':
+        utterance = re.sub(r'&\-\S+\s+', '', utterance)
+    elif handle == 'keep':
+        utterance = re.sub(r'&\-(\S+\s+)', r'\1', utterance)
+    elif handle == 'unk':
+        utterance = re.sub(r'&\-\S+', '<unk>', utterance)
+    else:
+        raise DataIntegrityError(
+            f'Invalid config format for "filler": {disfluencies_cfg}',
+            disfluencies_cfg
+        )
+
+    # Nonwords (&~)
+    handle = disfluencies_cfg.get('nonwords', 'null')
+    if handle == 'null':
+        utterance = re.sub(r'&\~\S+\s+', '', utterance)
+    elif handle == 'keep':
+        utterance = re.sub(r'&\~(\S+\s+)', r'\1', utterance)
+    elif handle == 'unk':
+        utterance = re.sub(r'&\~\S+', '<unk>', utterance)
+    else:
+        raise DataIntegrityError(
+            f'Invalid config format for "nonwords": {disfluencies_cfg}',
+            disfluencies_cfg
+        )
+
+    return utterance
+
+
 def process_incomplete(utterance: str, config: ChatConfig) -> str:
     """Process incomplete utterance markers in CHAT format transcripts.
 
