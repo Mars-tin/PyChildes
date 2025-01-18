@@ -26,3 +26,10 @@ repos:
         'flake8-docstrings==1.7.0',
         'flake8-quotes==3.4.0',
     ]
+- repo: local
+  hooks:
+  - id: unittest
+    name: unittest
+    entry: bash -c 'coverage run -m unittest discover data'
+    language: system
+    types: [python]
