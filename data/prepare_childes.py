@@ -37,7 +37,7 @@ class ChatConfig:
             yaml.YAMLError: If the YAML file is malformed.
         """
         if config_path is None:
-            config_path = 'configs/chat.yaml'
+            config_path = 'data/configs/example.yaml'
 
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
@@ -71,132 +71,132 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     # singing (@si)
     if spec_form_cfg.get('singing', True):
         utterance = re.sub(
-            r'(\S+)@si\b',
+            r'([^<>\s]+)@si\b',
             f'<{env_tag}>sings<sep>' + r'\1' + f'</{env_tag}>',
             utterance
         )
     else:
-        utterance = re.sub(r'(\S+)@si\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@si\b', r'\1', utterance)
 
     # sign language (@sl)
     if spec_form_cfg.get('sign', True):
         utterance = re.sub(
-            r'(\S+)@sl\b',
+            r'([^<>\s]+)@sl\b',
             f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
             utterance
         )
     else:
-        utterance = re.sub(r'(\S+)@sl\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@sl\b', r'\1', utterance)
 
     # sign and speech (@sas)
     if spec_form_cfg.get('sas', True):
         utterance = re.sub(
-            r'(\S+)@sl\b',
+            r'([^<>\s]+)@sl\b',
             f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
             utterance
         )
     else:
-        utterance = re.sub(r'(\S+)@sl\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@sl\b', r'\1', utterance)
 
     # Babbling (@b)
     marker = spec_form_cfg.get('babbling', '<unk>')
-    utterance = re.sub(r'\S+@b\b', marker, utterance)
+    utterance = re.sub(r'[^<>\s]+@b\b', marker, utterance)
 
     # Child-invented forms (@c)
     marker = spec_form_cfg.get('child_invented', '<unk>')
-    utterance = re.sub(r'\S+@c\b', marker, utterance)
+    utterance = re.sub(r'[^<>\s]+@c\b', marker, utterance)
 
     # Dialect form (@d)
     if spec_form_cfg.get('dialect', True):
-        utterance = re.sub(r'(\S+)@d\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@d\b', r'\1', utterance)
     else:
-        utterance = re.sub(r'\S+@d\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@d\b', '<unk>', utterance)
 
     # Filled pause (@fp)
     if spec_form_cfg.get('filled_pause', False):
-        utterance = re.sub(r'\S+@fp\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@fp\b', '<unk>', utterance)
     else:
-        utterance = re.sub(r'\S+@fp\b', '', utterance)
+        utterance = re.sub(r'[^<>\s]+@fp\b', '', utterance)
 
     # Family-specific forms (@f)
     marker = spec_form_cfg.get('family_spec', '<unk>')
-    utterance = re.sub(r'\S+@f\b', marker, utterance)
+    utterance = re.sub(r'[^<>\s]+@f\b', marker, utterance)
 
     # General special form (@g)
     if spec_form_cfg.get('general', False):
-        utterance = re.sub(r'\S+@g\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@g\b', '<unk>', utterance)
     else:
-        utterance = re.sub(r'\S+@g\b', '', utterance)
+        utterance = re.sub(r'[^<>\s]+@g\b', '', utterance)
 
     # Interjections (@i)
     if spec_form_cfg.get('interjections', True):
-        utterance = re.sub(r'(\S+)@i\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@i\b', r'\1', utterance)
     else:
-        utterance = re.sub(r'\S+@i\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@i\b', '<unk>', utterance)
 
     # Multi_letters (@k)
     if spec_form_cfg.get('multi_letters', True):
-        utterance = re.sub(r'(\S+)@k\b', lambda m: ' '.join(m.group(1)).upper(), utterance)
+        utterance = re.sub(r'([^<>\s]+)@k\b', lambda m: ' '.join(m.group(1)).upper(), utterance)
     else:
-        utterance = re.sub(r'\S+@k\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@k\b', '<unk>', utterance)
 
     # Letter (@l)
     if spec_form_cfg.get('letter', True):
-        utterance = re.sub(r'(\S+)@l\b', lambda m: m.group(1).upper(), utterance)
+        utterance = re.sub(r'([^<>\s]+)@l\b', lambda m: m.group(1).upper(), utterance)
     else:
-        utterance = re.sub(r'\S+@l\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@l\b', '<unk>', utterance)
 
     # Neologism (@n)
     if spec_form_cfg.get('neologism', False):
-        utterance = re.sub(r'(\S+)@n\b', r'\1' + ' <neo>', utterance)
+        utterance = re.sub(r'([^<>\s]+)@n\b', r'\1' + ' <neo>', utterance)
     else:
-        utterance = re.sub(r'(\S+)@n\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@n\b', r'\1', utterance)
 
     # Phonological consistent forms (PCFs, @p)
     if spec_form_cfg.get('pcf', False):
-        utterance = re.sub(r'(\S+)@p\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@p\b', r'\1', utterance)
     else:
-        utterance = re.sub(r'\S+@p\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@p\b', '<unk>', utterance)
 
     # Metalinguistics (@q)
     if spec_form_cfg.get('metaling', False):
-        utterance = re.sub(r'(\S+)@q\b', r'"\1"', utterance)
+        utterance = re.sub(r'([^<>\s]+)@q\b', r'"\1"', utterance)
     else:
-        utterance = re.sub(r'(\S+)@q\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@q\b', r'\1', utterance)
 
     # Second language (@s)
     if spec_form_cfg.get('l2', True):
-        utterance = re.sub(r'(\S+)@s[:$]\S+\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@s[:$][^<>\s]+\b', r'\1', utterance)
     else:
-        utterance = re.sub(r'\S+@s[:$]\S+\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@s[:$][^<>\s]+\b', '<unk>', utterance)
 
     # Onomatopoeias (@o)
     if spec_form_cfg.get('onomatopoeia', True):
-        utterance = re.sub(r'(\S+)@o\b', lambda m: m.group(1).replace('_', ' '), utterance)
+        utterance = re.sub(r'([^<>\s]+)@o\b', lambda m: m.group(1).replace('_', ' '), utterance)
     else:
-        utterance = re.sub(r'\S+@o\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@o\b', '<unk>', utterance)
 
     # Test word (@t)
     if spec_form_cfg.get('testword', True):
-        utterance = re.sub(r'(\S+)@t\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@t\b', r'\1', utterance)
     else:
-        utterance = re.sub(r'\S+@t\b', '<unk>', utterance)
+        utterance = re.sub(r'[^<>\s]+@t\b', '<unk>', utterance)
 
     # Unibet (@u)
     if spec_form_cfg.get('unibet', False):
-        utterance = re.sub(r'(\S+)@u\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@u\b', r'\1', utterance)
     else:
-        utterance = re.sub(r'(\S+)@u\b', pho_tag, utterance)
+        utterance = re.sub(r'([^<>\s]+)@u\b', pho_tag, utterance)
 
     # Word Play (@wp)
     marker = spec_form_cfg.get('wordplay', '<unk>')
-    utterance = re.sub(r'\S+@wp\b', marker, utterance)
+    utterance = re.sub(r'[^<>\s]+@wp\b', marker, utterance)
 
     # Excluded words (@x)
     if spec_form_cfg.get('excluded', False):
-        utterance = re.sub(r'(\S+)@x\b', r'\1', utterance)
+        utterance = re.sub(r'([^<>\s]+)@x\b', r'\1', utterance)
     else:
-        utterance = re.sub(r'(\S+)@x\b', '<unk>', utterance)
+        utterance = re.sub(r'([^<>\s]+)@x\b', '<unk>', utterance)
 
     return utterance
 
@@ -256,11 +256,11 @@ def process_disfluencies(utterance: str, config: ChatConfig) -> str:
     # Phonological Fragments (&+)
     handle = disfluencies_cfg.get('fragment', 'null')
     if handle == 'null':
-        utterance = re.sub(r'&\+\S+\s+', '', utterance)
+        utterance = re.sub(r'&\+[^<>\s]+\s+', '', utterance)
     elif handle == 'keep':
-        utterance = re.sub(r'&\+(\S+\s+)', r'\1', utterance)
+        utterance = re.sub(r'&\+([^<>\s]+\s+)', r'\1', utterance)
     elif handle == 'unk':
-        utterance = re.sub(r'&\+\S+', '<unk>', utterance)
+        utterance = re.sub(r'&\+[^<>\s]+', '<unk>', utterance)
     else:
         raise DataIntegrityError(
             f'Invalid config format for "fragment": {disfluencies_cfg}',
@@ -270,11 +270,11 @@ def process_disfluencies(utterance: str, config: ChatConfig) -> str:
     # Phonological Fillers (&-)
     handle = disfluencies_cfg.get('filler', 'null')
     if handle == 'null':
-        utterance = re.sub(r'&\-\S+\s+', '', utterance)
+        utterance = re.sub(r'&\-[^<>\s]+\s+', '', utterance)
     elif handle == 'keep':
-        utterance = re.sub(r'&\-(\S+\s+)', r'\1', utterance)
+        utterance = re.sub(r'&\-([^<>\s]+\s+)', r'\1', utterance)
     elif handle == 'unk':
-        utterance = re.sub(r'&\-\S+', '<unk>', utterance)
+        utterance = re.sub(r'&\-[^<>\s]+', '<unk>', utterance)
     else:
         raise DataIntegrityError(
             f'Invalid config format for "filler": {disfluencies_cfg}',
@@ -284,11 +284,11 @@ def process_disfluencies(utterance: str, config: ChatConfig) -> str:
     # Nonwords (&~)
     handle = disfluencies_cfg.get('nonwords', 'null')
     if handle == 'null':
-        utterance = re.sub(r'&\~\S+\s+', '', utterance)
+        utterance = re.sub(r'&\~[^<>\s]+\s+', '', utterance)
     elif handle == 'keep':
-        utterance = re.sub(r'&\~(\S+\s+)', r'\1', utterance)
+        utterance = re.sub(r'&\~([^<>\s]+\s+)', r'\1', utterance)
     elif handle == 'unk':
-        utterance = re.sub(r'&\~\S+', '<unk>', utterance)
+        utterance = re.sub(r'&\~[^<>\s]+', '<unk>', utterance)
     else:
         raise DataIntegrityError(
             f'Invalid config format for "nonwords": {disfluencies_cfg}',
@@ -342,131 +342,164 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     """
     scope_cfg = config.utterance['scoped']
 
+    # Special handles for overlap (10.4)
+    # TODO: For now we just remove overlap marks
+    if scope_cfg.get('alternative', False):
+        raise NotImplementedError
+    else:
+        utterance = re.sub(
+            r'(?:<([^>]+)>|(\S+))\s*\[[<>{}]\d*\]',
+            lambda m: m.group(1) or m.group(2),
+            utterance
+        )
+
     # Find all minimal regions with markers
     # Capture the identifier in group 4
-    all_identifiers = ['=!', '=?', '=', '!!', '!', '#', ':', '::', '%', '?']
+    all_identifiers = [
+        '=!', '=?', '=', '!!', '!', '#', ':', '::', '%', '?',
+    ]
     all_identifiers = sorted(all_identifiers, key=len, reverse=True)
-    regions = re.finditer(
-        (
-            # Match either bracketed text in <...> or single word without spaces
-            r"""(?:<([^>]+)>|(\S+))""" +
 
-            # Match optional whitespace followed by opening square bracket
-            r"""\s*\[""" +
+    # First, match the base text which can be either in <> or a single word
+    base_pattern = r"""(?:<([^>]+)>|(\S+))"""
 
-            # Match one of the special identifiers (=!, =, !!, etc)
-            fr"""({"|".join(re.escape(i) for i in all_identifiers)})""" +
+    # Then match one or more identifier-event pairs
+    identifier_pattern = (
+        # Start with [
+        r"""\s*\[""" +
 
-            # Match optional whitespace followed by any text until closing bracket
-            r"""\s*([^\]]*)?""" +
+        # Identifier must come IMMEDIATELY after [
+        fr"""({"|".join(re.escape(i) for i in all_identifiers)})""" +
 
-            # Match closing square bracket
-            r"""\]"""
-        ),
-        utterance
+        # Optional event text until ]
+        r"""\s*([^\]]*)?""" +
+
+        # End with ]
+        r"""\]"""
     )
+
+    # Must have base text followed by ONE OR MORE identifier blocks
+    full_pattern = base_pattern + f'(?:{identifier_pattern})+'
+
+    # Use in code:
+    regions = re.finditer(full_pattern, utterance)
 
     # Process each match from end to start
     replacements = []
     for match in regions:
-        phrase_in_brackets, word, identifier, event = match.groups()
+
+        # Get base text
+        phrase_in_brackets, word = match.groups()[:2]
         text = phrase_in_brackets if phrase_in_brackets else word
         start, end = match.span()
 
-        # Paralinguistic Material (10.2)
-        if identifier == '=!':
-            tag = scope_cfg.get('paralinguistic', 'evt')
-            if tag != 'null':
-                replacements.append((
-                    start, end,
-                    f'<{tag}>{event}<sep>{text}</{tag}>'
-                ))
-            else:
+        # Only search for identifier-events in the part after the base text
+        base_text = phrase_in_brackets if phrase_in_brackets else word
+        full_text = match.group()
+        remaining_text = full_text[len(base_text):]
+
+        # Get all identifier-event pairs
+        identifier_events = re.findall(
+            fr"""({"|".join(re.escape(i) for i in all_identifiers)})\s*([^\]]*)?""",
+            remaining_text
+        )
+
+        # print(phrase_in_brackets, word, identifier_events)
+
+        for identifier, event in identifier_events:
+
+            # Paralinguistic Material (10.2)
+            if identifier == '=!':
+                tag = scope_cfg.get('paralinguistic', 'evt')
+                if tag != 'null':
+                    replacements.append((
+                        start, end,
+                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                    ))
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
+            # Alternative Transcription (10.3)
+            elif identifier == '=?':
+                if scope_cfg.get('alternative', False):
+                    replacements.append((
+                        start, end, f'{event}'
+                    ))
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
+            # Explanation and Comment (10.3)
+            elif identifier == '=' or identifier == '%':
+                tag = scope_cfg.get('explanation', 'null')
+                if tag != 'null':
+                    replacements.append((
+                        start, end,
+                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                    ))
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
+            # Contrastive Stressing (10.2)
+            elif identifier == '!!':
+                assert (event is None) or (event == '')
+                tag = scope_cfg.get('contra_stressing', 'stress')
+                if tag != 'null':
+                    replacements.append((
+                        start, end,
+                        f'<{tag}>{text}</{tag}>'
+                    ))
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
+            # Stressing (10.2)
+            elif identifier == '!':
+                assert (event is None) or (event == '')
+                tag = scope_cfg.get('stressing', 'stress')
+                if tag != 'null':
+                    replacements.append((
+                        start, end,
+                        f'<{tag}>{text}</{tag}>'
+                    ))
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
+            # Duration (10.2)
+            # TODO: For now we just remove duration marks
+            elif identifier == '#':
                 replacements.append((
                     start, end, f'{text}'
                 ))
 
-        # Alternative Transcription (10.3)
-        elif identifier == '=?':
-            if scope_cfg.get('alternative', False):
-                replacements.append((
-                    start, end, f'{event}'
-                ))
-            else:
+            # Best Guess (10.3)
+            # TODO: For now we just remove guess marks
+            elif identifier == '?':
                 replacements.append((
                     start, end, f'{text}'
                 ))
 
-        # Explanation and Comment (10.3)
-        elif identifier == '=' or identifier == '%':
-            tag = scope_cfg.get('explanation', 'null')
-            if tag != 'null':
-                replacements.append((
-                    start, end,
-                    f'<{tag}>{event}<sep>{text}</{tag}>'
-                ))
+            # Replacement (of Real Word) (10.3)
+            elif identifier == ':' or identifier == '::':
+                if scope_cfg.get('replacement', True):
+                    replacements.append((
+                        start, end, f'{event}'
+                    ))
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
             else:
-                replacements.append((
-                    start, end, f'{text}'
-                ))
-
-        # Contrastive Stressing (10.2)
-        elif identifier == '!!':
-            assert (event is None) or (event == '')
-            tag = scope_cfg.get('contra_stressing', 'stress')
-            if tag != 'null':
-                replacements.append((
-                    start, end,
-                    f'<{tag}>{text}</{tag}>'
-                ))
-            else:
-                replacements.append((
-                    start, end, f'{text}'
-                ))
-
-        # Stressing (10.2)
-        elif identifier == '!':
-            assert (event is None) or (event == '')
-            tag = scope_cfg.get('stressing', 'stress')
-            if tag != 'null':
-                replacements.append((
-                    start, end,
-                    f'<{tag}>{text}</{tag}>'
-                ))
-            else:
-                replacements.append((
-                    start, end, f'{text}'
-                ))
-
-        # Duration (10.2)
-        # TODO: For now we just remove duration marks
-        elif identifier == '#':
-            replacements.append((
-                start, end, f'{text}'
-            ))
-
-        # Best Guess (10.3)
-        # TODO: For now we just remove guess marks
-        elif identifier == '?':
-            replacements.append((
-                start, end, f'{text}'
-            ))
-
-        # Replacement (of Real Word) (10.3)
-        elif identifier == ':' or identifier == '::':
-            if scope_cfg.get('replacement', True):
-                replacements.append((
-                    start, end, f'{event}'
-                ))
-            else:
-                replacements.append((
-                    start, end, f'{text}'
-                ))
-
-        else:
-            replacements.append((
-                start, end, f'{text}'
-            ))
+                continue
 
     # Apply replacements from end to start
     for start, end, replacement in sorted(replacements, reverse=True):
@@ -522,7 +555,10 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     if config.utterance.get('keep_speaker', True):
         speaker = '<' + speaker_id[1:] + '>'
 
-    # Process special forms
+    # Process paralinguistic scope markers
+    utterance = process_paralinguistic(utterance, config)
+
+    # Process special forms, must go after paralinguistic
     utterance = process_special_form(utterance, config)
 
     # Process disfluencies
@@ -533,9 +569,6 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
 
     # Process unidentifiable markers
     utterance = process_unidentifiable(utterance, config)
-
-    # Process paralinguistic scope markers
-    utterance = process_paralinguistic(utterance, config)
 
     # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
     # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
@@ -639,7 +672,7 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
 if __name__ == '__main__':
 
     # Example usage
-    input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
-    output_file = 'prep/childes/output.cha'
-    config_path = 'configs/example.yaml'
+    input_file = 'data/raw/childes/Eng-NA/Bates/Free20/amy.cha'
+    output_file = 'data/prep/childes/output.cha'
+    config_path = 'data/configs/example.yaml'
     process_cha_file(input_file, output_file, config_path)

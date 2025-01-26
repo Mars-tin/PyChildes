@@ -358,6 +358,10 @@ utterance:
   # -----------
   # Process the paralinguistic and duration scoping
   #   Refer To: Sec. 10.2
+  # Explanations and Alternatives
+  #   Refer To: Sec. 10.3
+  # Retracing, Overlap, Exclusions, and Clauses
+  #   Refer To: Sec. 10.4
   scoped:
 
     # paralinguistic ([=!]):
@@ -376,7 +380,7 @@ utterance:
     #   Default: 'null' (angle brackets automatically apply if not null)
     explanation: 'exp'
 
-    # replacement ([:] amd [::]):
+    # replacement ([:] and [::]):
     # -----------
     # Earlier we discussed the use of a variety of nonstandard forms such as "gonna" and “hafta.".
     # In order for MOR to morphemicize such words, the transcriber can use a replacement symbol that allows
@@ -411,6 +415,19 @@ utterance:
     #     false = keep original form
     #   Default: false
     alternative: false
+
+    # [TODO] overlap ([>] and [<]):
+    # -----------
+    # In the course of a conversation, speakers often talk at the same time.
+    # Transcribing these interactions can be trying. This and the following two symbols
+    # are designed to help sort out this difficult transcription task.
+    # The overlap follows [>] symbol indicates that speakers are talking at the same time.
+    # This code must be used in combination with the overlap precedes symbol [<]
+    #   Values (bool):
+    #     true = [TODO: add special tokens]
+    #     false = keep original form
+    #   Default: false
+    overlap: false
 
 # Dependent Tiers (%)
 # -----------
