@@ -37,7 +37,7 @@ class ChatConfig:
             yaml.YAMLError: If the YAML file is malformed.
         """
         if config_path is None:
-            config_path = 'data/configs/example.yaml'
+            config_path = './configs/example.yaml'
 
         try:
             with open(config_path, 'r', encoding='utf-8') as f:
@@ -347,6 +347,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     if scope_cfg.get('alternative', False):
         raise NotImplementedError
     else:
+        utterance = re.sub(r'\+\<\s*', '', utterance)
         utterance = re.sub(
             r'(?:<([^>]+)>|(\S+))\s*\[[<>{}]\d*\]',
             lambda m: m.group(1) or m.group(2),
@@ -672,7 +673,7 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
 if __name__ == '__main__':
 
     # Example usage
-    input_file = 'data/raw/childes/Eng-NA/Bates/Free20/amy.cha'
-    output_file = 'data/prep/childes/output.cha'
-    config_path = 'data/configs/example.yaml'
+    input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
+    output_file = 'prep/childes/output.cha'
+    config_path = 'configs/example.yaml'
     process_cha_file(input_file, output_file, config_path)

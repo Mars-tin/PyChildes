@@ -416,7 +416,7 @@ utterance:
     #   Default: false
     alternative: false
 
-    # [TODO] overlap ([>] and [<]):
+    # [TODO] overlap ([>] and [<] and +<):
     # -----------
     # In the course of a conversation, speakers often talk at the same time.
     # Transcribing these interactions can be trying. This and the following two symbols
