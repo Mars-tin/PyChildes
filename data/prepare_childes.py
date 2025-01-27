@@ -116,7 +116,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('filled_pause', False):
         utterance = re.sub(r'[^<>\s]+@fp\b', '<unk>', utterance)
     else:
-        utterance = re.sub(r'[^<>\s]+@fp\b', '', utterance)
+        utterance = re.sub(r'\s*[^<>\s]+@fp\b\s*', ' ', utterance)
 
     # Family-specific forms (@f)
     marker = spec_form_cfg.get('family_spec', '<unk>')
@@ -126,7 +126,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('general', False):
         utterance = re.sub(r'[^<>\s]+@g\b', '<unk>', utterance)
     else:
-        utterance = re.sub(r'[^<>\s]+@g\b', '', utterance)
+        utterance = re.sub(r'\s*[^<>\s]+@g\b\s*', ' ', utterance)
 
     # Interjections (@i)
     if spec_form_cfg.get('interjections', True):
