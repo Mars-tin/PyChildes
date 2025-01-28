@@ -416,6 +416,66 @@ utterance:
     #   Default: false
     alternative: false
 
+    # repetition ([/] and [x N]):
+    # -----------
+    # The [/] symbol is used in those cases when a speaker begins to say something,
+    # stops and then repeats the earlier material without change.
+    #   Values (bool):
+    #     true = keep repetitions
+    #     false = remove repetitions
+    #   Default: false
+    repetition: false
+
+    # retracing ([//]):
+    # -----------
+    # This symbol is used when a speaker starts to say something, stops, repeats the basic phrase,
+    # changes the syntax but maintains the same idea.
+    #   Values (bool):
+    #     true = mark as ellipsis (...)
+    #     false = remove retracing
+    #   Default: true
+    retracing: true
+
+    # reformulation ([//]):
+    # -----------
+    # Sometimes retracings involve full and complete reformulations of the message without any specific corrections.
+    #   Values (bool):
+    #     true = mark as ellipsis (...)
+    #     false = remove reformulation
+    #   Default: true
+    reformulation: true
+
+    # false_start ([/-]):
+    # -----------
+    # False start without retracing.
+    #   Values (bool):
+    #     true = mark as ellipsis (...)
+    #     false = remove false start
+    #   Default: true
+    false_start: true
+
+    # excluded ([e] or [+ exc]):
+    # -----------
+    # Certain types of analysis focus on the speaker’s ability to produce task-relevant material.
+    # For example, in a picture description task, it may be useful to exclude material
+    # that is not relevant to the actual description of the picture.
+    #   Values (bool):
+    #     true = remove the contents
+    #     false = keep the contents
+    #   Default: true
+    excluded: true
+
+    # clause ([^c]):
+    # -----------
+    # Clause Delimiter.
+    # If you wish to conduct analyses such as MLU and MLT based on clauses rather than utterances as the basic unit of analysis,
+    # you should mark the end of each clause with this symbol.
+    #   Values (bool):
+    #     true = keep the clause
+    #     false = remove the clause
+    #   Default: true
+    clause: true
+
     # [TODO] overlap ([>] and [<] and +<):
     # -----------
     # In the course of a conversation, speakers often talk at the same time.

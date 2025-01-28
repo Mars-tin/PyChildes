@@ -358,6 +358,8 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     # Capture the identifier in group 4
     all_identifiers = [
         '=!', '=?', '=', '!!', '!', '#', ':', '::', '%', '?',
+        '/', 'x', '//', '///', '/-', '/?',
+        'e', '+', '^c'
     ]
     all_identifiers = sorted(all_identifiers, key=len, reverse=True)
 
@@ -373,7 +375,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
         fr"""({"|".join(re.escape(i) for i in all_identifiers)})""" +
 
         # Optional event text until ]
-        r"""\s*([^\]]*)?""" +
+        r"""(?:\s*([^\]]*))?""" +
 
         # End with ]
         r"""\]"""
@@ -401,16 +403,36 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
         # Get all identifier-event pairs
         identifier_events = re.findall(
-            fr"""({"|".join(re.escape(i) for i in all_identifiers)})\s*([^\]]*)?""",
+            fr"""\["""
+            fr"""({"|".join(re.escape(i) for i in all_identifiers)})"""
+            r"""(?:\s*([^\]]*))?"""
+            r"""\]""",
             remaining_text
         )
 
-        # print(phrase_in_brackets, word, identifier_events)
-
         for identifier, event in identifier_events:
 
+            # Excluded Material (10.4)
+            if identifier == '+' and event == 'exc':
+                if scope_cfg.get('excluded', True):
+                    return ''
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
+            elif identifier == 'e':
+                if scope_cfg.get('excluded', True):
+                    replacements.append((
+                        start, end+1, ''
+                    ))
+                else:
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+
             # Paralinguistic Material (10.2)
-            if identifier == '=!':
+            elif identifier == '=!':
                 tag = scope_cfg.get('paralinguistic', 'evt')
                 if tag != 'null':
                     replacements.append((
@@ -497,6 +519,61 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 else:
                     replacements.append((
                         start, end, f'{text}'
+                    ))
+
+            # Repetition (10.4)
+            elif identifier == '/' or identifier == 'x':
+                if scope_cfg.get('repetition', False):
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+                else:
+                    replacements.append((
+                        start, end+1, ''
+                    ))
+
+            # Retracing (10.4)
+            elif identifier == '//':
+                if scope_cfg.get('retracing', True):
+                    replacements.append((
+                        start, end, f'{text} ...'
+                    ))
+                else:
+                    replacements.append((
+                        start, end+1, ''
+                    ))
+
+            # Reformulation (10.4)
+            elif identifier == '///':
+                if scope_cfg.get('reformulation', True):
+                    replacements.append((
+                        start, end, f'{text} ...'
+                    ))
+                else:
+                    replacements.append((
+                        start, end+1, ''
+                    ))
+
+            # False Start Without Retracing (10.4)
+            elif identifier == '/-':
+                if scope_cfg.get('false_start', True):
+                    replacements.append((
+                        start, end, f'{text} ...'
+                    ))
+                else:
+                    replacements.append((
+                        start, end+1, ''
+                    ))
+
+            # Clause Delimiter (10.4)
+            elif identifier == '^c':
+                if scope_cfg.get('clause', True):
+                    replacements.append((
+                        start, end, f'{text}'
+                    ))
+                else:
+                    replacements.append((
+                        start, end+1, ''
                     ))
 
             else:

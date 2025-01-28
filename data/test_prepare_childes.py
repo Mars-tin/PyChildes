@@ -178,3 +178,47 @@ class TestPrepareChildes(unittest.TestCase):
             '+< they had to go in here', config),
             'they had to go in here'
         )
+        self.assertEqual(pc.process_paralinguistic(
+            '<I wanted> [/] I wanted to invite Margie', config),
+            'I wanted to invite Margie'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            "it's [/] (.) &-um (.) it's [/] it's (.) a &-um (.) dog", config),
+            "(.) &-um (.) it's (.) a &-um (.) dog"
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            "<it's it's it's> [/] it's (.) a &-um (.) dog", config),
+            "it's (.) a &-um (.) dog"
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            "it's [x 3] it's (.) a &-um (.) dog", config),
+            "it's (.) a &-um (.) dog"
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            '<I wanted> [//] &-uh I thought I wanted to invite Margie', config),
+            'I wanted ... &-uh I thought I wanted to invite Margie'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            '<the fish is> [//] the [/] the fish are swimming', config),
+            'the fish is ... the fish are swimming'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            '<all of my friends had> [///] uh we all decided to go home for lunch', config),
+            'all of my friends had ... uh we all decided to go home for lunch'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            '<I wanted> [/-] uh when is Margie coming', config),
+            'I wanted ... uh when is Margie coming'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            '<I think that maybe> [e] the cat is up the tree', config),
+            'the cat is up the tree'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            'I think that maybe the cat is up the tree [+ exc]', config),
+            ''
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            'The pig has not yet fed [^c err]', config),
+            'The pig has not yet fed'
+        )
