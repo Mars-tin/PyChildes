@@ -358,8 +358,8 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     # Capture the identifier in group 4
     all_identifiers = [
         '=!', '=?', '=', '!!', '!', '#', ':', '::', '%', '?',
-        '/', 'x', '//', '///', '/-', '/?',
-        'e', '+', '^c'
+        '/', 'x', '//', '///', '/-', '/?', '*',
+        'e', '+', '-', '^c'
     ]
     all_identifiers = sorted(all_identifiers, key=len, reverse=True)
 
@@ -412,15 +412,46 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
         for identifier, event in identifier_events:
 
-            # Excluded Material (10.4)
-            if identifier == '+' and event == 'exc':
-                if scope_cfg.get('excluded', True):
-                    return ''
-                else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+            # Excluded Material (10.4) & Postcodes (10.5)
+            if identifier == '+':
 
+                # Excluded Material (10.4)
+                if event == 'exc':
+                    if scope_cfg.get('excluded', True):
+                        return ''
+                    else:
+                        replacements.append((
+                            start, end, f'{text}'
+                        ))
+
+                # Back Channel (10.6)
+                elif event == 'bch':
+                    if scope_cfg.get('back_channel', True):
+                        return ''
+                    else:
+                        replacements.append((
+                            start, end, f'{text}'
+                        ))
+
+                # Included Turn (10.6)
+                elif event == 'trn':
+                    if scope_cfg.get('include_turn', True):
+                        replacements.append((
+                            start, end, f'{text}'
+                        ))
+                    else:
+                        return ''
+
+                # Postcode (10.6)
+                else:
+                    if scope_cfg.get('postcode', True):
+                        return ''
+                    else:
+                        replacements.append((
+                            start, end, f'{text}'
+                        ))
+
+            # Excluded Material (10.4)
             elif identifier == 'e':
                 if scope_cfg.get('excluded', True):
                     replacements.append((
@@ -429,6 +460,24 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 else:
                     replacements.append((
                         start, end, f'{text}'
+                    ))
+
+            # Error Marking (10.5)
+            elif identifier == '*':
+                if scope_cfg.get('error', False):
+                    return ''
+                else:
+                    replacements.append((
+                        start, end+1, ''
+                    ))
+
+            # Precodes (10.6)
+            elif identifier == '-':
+                if scope_cfg.get('precode', False):
+                    return ''
+                else:
+                    replacements.append((
+                        start, end+1, ''
                     ))
 
             # Paralinguistic Material (10.2)

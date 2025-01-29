@@ -362,6 +362,10 @@ utterance:
   #   Refer To: Sec. 10.3
   # Retracing, Overlap, Exclusions, and Clauses
   #   Refer To: Sec. 10.4
+  # Error Marking
+  #   Refer To: Sec. 10.5
+  # Precodes and Postcodes
+  #   Refer To: Sec. 10.6
   scoped:
 
     # paralinguistic ([=!]):
@@ -454,17 +458,6 @@ utterance:
     #   Default: true
     false_start: true
 
-    # excluded ([e] or [+ exc]):
-    # -----------
-    # Certain types of analysis focus on the speaker’s ability to produce task-relevant material.
-    # For example, in a picture description task, it may be useful to exclude material
-    # that is not relevant to the actual description of the picture.
-    #   Values (bool):
-    #     true = remove the contents
-    #     false = keep the contents
-    #   Default: true
-    excluded: true
-
     # clause ([^c]):
     # -----------
     # Clause Delimiter.
@@ -475,6 +468,67 @@ utterance:
     #     false = remove the clause
     #   Default: true
     clause: true
+
+    # error ([*]):
+    # -----------
+    # Errors are marked by placing the [*] symbol after the error.
+    # Usually, the [*] marker occurs right after the error.
+    #   Values (bool):
+    #     true = remove the utterance
+    #     false = keep the utterance
+    #   Default: false
+    error: false
+
+    # precode ([- ISO]):
+    # -----------
+    # Language precodes are used to mark the switch to a different language in multilingual interactions.
+    #   Values (bool):
+    #     true = remove the precoded utterance
+    #     false = keep the precoded utterance
+    #   Default: false
+    precode: false
+
+    # postcode ([+ ISO]):
+    # -----------
+    # Postcodes are symbols placed into square brackets at the end of the utterance.
+    # They should include the plus sign and a space after the left bracket.
+    # There is no predefined set of postcodes.
+    #   Values (bool):
+    #     true = remove the postcoded utterance
+    #     false = keep the postcoded utterance
+    #   Default: false
+    postcode: false
+
+    # back_channel ([+ bch]):
+    # -----------
+    # Sometimes we want to have a way of marking utterances that are
+    # not really a part of the main interaction, but are in some back channel.
+    #   Values (bool):
+    #     true = remove the back channel utterance
+    #     false = keep the back channel utterance
+    #   Default: true
+    back_channel: true
+
+    # include_turn ([+ trn]):
+    # -----------
+    # The [+ trn] postcode can force the MLT command to treat an utterance
+    # as a turn when it would normally not be treated as a turn.
+    #   Values (bool):
+    #     true = keep the added turn
+    #     false = remove the added turn
+    #   Default: true
+    include_turn: true
+
+    # excluded ([e] or [+ exc]):
+    # -----------
+    # Certain types of analysis focus on the speaker’s ability to produce task-relevant material.
+    # For example, in a picture description task, it may be useful to exclude material
+    # that is not relevant to the actual description of the picture.
+    #   Values (bool):
+    #     true = remove the contents
+    #     false = keep the contents
+    #   Default: true
+    excluded: true
 
     # [TODO] overlap ([>] and [<] and +<):
     # -----------

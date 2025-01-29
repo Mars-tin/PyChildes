@@ -147,6 +147,10 @@ class TestPrepareChildes(unittest.TestCase):
             'went'
         )
         self.assertEqual(pc.process_paralinguistic(
+            'goed [: went] [*]', config),
+            'went'
+        )
+        self.assertEqual(pc.process_paralinguistic(
             'we want <one or two> [=? one too]', config),
             'we want one or two'
         )
@@ -221,4 +225,16 @@ class TestPrepareChildes(unittest.TestCase):
         self.assertEqual(pc.process_paralinguistic(
             'The pig has not yet fed [^c err]', config),
             'The pig has not yet fed'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            " I'll get it. [+ bch]", config),
+            ''
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            '0. [+ trn]', config),
+            '0.'
+        )
+        self.assertEqual(pc.process_paralinguistic(
+            'not this one. [+ neg] [- req] [+ inc]', config),
+            'not this one.'
         )
