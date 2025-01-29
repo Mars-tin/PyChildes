@@ -148,6 +148,9 @@ def process_linker(utterance: str, config: ChatConfig) -> str:
     # Interruption (9.11)
     if not unid_linkers.get('interruption', False):
         utterance = re.sub(r'\+\/\.', '...', utterance)
+
+    # Self Completion (9.12)
+    if not unid_linkers.get('completion', False):
         utterance = re.sub(r'\+\,\s', '', utterance)
 
     # Interruption of a Question (9.11)
@@ -166,14 +169,23 @@ def process_linker(utterance: str, config: ChatConfig) -> str:
     if not unid_linkers.get('trans_break', False):
         utterance = re.sub(r'\+\.', '.', utterance)
 
-    # [TODO] Quotation Follows and Precedes (9.11)
+    # [TODO] Quotation (9.11, 9.12)
     # Currently just remove all quotation marks.
     # In the future can add a pair of quotation marks to the sequence.
     if not unid_linkers.get('quote_precede', False):
         utterance = re.sub(r'\+\"\.', '.', utterance)
     if not unid_linkers.get('quote_follow', False):
         utterance = re.sub(r'\+\"\/\.', ':', utterance)
+    if not unid_linkers.get('quote_utterance', False):
         utterance = re.sub(r'\+\"\s', '', utterance)
+
+    # Quick Uptake (9.12)
+    if not unid_linkers.get('uptake', False):
+        utterance = re.sub(r'\+\^\s', '', utterance)
+
+    # Other Completion, i.e., Latching (9.12)
+    if not unid_linkers.get('latching', False):
+        utterance = re.sub(r'\+\+\s', '', utterance)
 
     return utterance
 

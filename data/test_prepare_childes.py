@@ -83,6 +83,18 @@ class TestPrepareChildes(unittest.TestCase):
             'with your spoon.'
         )
         self.assertEqual(pc.process_linker(
+            '++ he would have come', config),
+            'he would have come'
+        )
+        self.assertEqual(pc.process_linker(
+            "+^ I really didn't", config),
+            "I really didn't"
+        )
+        self.assertEqual(pc.process_linker(
+            '+, with your spoon.', config),
+            'with your spoon.'
+        )
+        self.assertEqual(pc.process_linker(
             'what did you +/?', config),
             'what did you ...?'
         )

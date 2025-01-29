@@ -175,9 +175,19 @@ utterance:
     # because one speaker is interrupt­ed by another speaker.
     #   Values (bool):
     #     true = keep trailing form
-    #     false = mark +/. as ellipsis (...) and remove +,
+    #     false = mark +/. as ellipsis (...)
     #   Default: false
     interruption: false
+
+    # completion (+,):
+    # -----------
+    # The symbol +, can be used at the beginning of a main tier line
+    # to mark the completion of an utterance after an interruption.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove self-completion
+    #   Default: false
+    completion: false
 
     # interruption_q (+/?):
     # -----------
@@ -216,14 +226,35 @@ utterance:
     #   Default: false
     trans_break: false
 
-    # [TODO] quote_follow (+"/. and +"):
+    # uptake (+^):
+    # -----------
+    # Sometimes an utterance of one speaker follows quickly on the heels
+    # of the last utterance of the preceding speaker without the customary
+    # short pause between utterances.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove the update mark
+    #   Default: false
+    uptake: false
+
+    # latching (++):
+    # -----------
+    # A variant form of the +, symbol is the ++ symbol
+    # which marks latching or the com­pletion of another speaker's utterance
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove the latching mark
+    #   Default: false
+    latching: false
+
+    # quote_follow (+"/. and +"):
     # -----------
     # The use of the +"/. symbol is linked to the use of the +" symbol.
     # Breaking up quoted material in this way allows us to maintain the rule
     # that each separate utterance should be on a separate line.
     #   Values (bool):
     #     true = keep trailing form
-    #     false = mark as a colon and remove quotation marks
+    #     false = mark as a colon
     #   Default: false
     quote_follow: false
 
@@ -235,6 +266,15 @@ utterance:
     #     false = mark as a period and remove quotation marks
     #   Default: false
     quote_precede: false
+
+    # [TODO] quote_utterance (+"):
+    # -----------
+    # It is placed at the beginning of an utterance that is being directly quoted.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = simply remove quotation marks and keep utterance
+    #   Default: false
+    quote_utterance: false
 
   # incomplete:
   # -----------
