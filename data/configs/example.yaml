@@ -60,6 +60,77 @@ utterance:
   #   Default: '<0>'
   nonverbal: '<0>'
 
+  # basic:
+  # -----------
+  # Process the single char markers and separators.
+  #   Refer To: Sec. 9.3, 9.6, 9.8, 9.9
+  basic:
+
+    # satellite (‡ and „):
+    # -----------
+    # Segmentation into utterances can be facilitated through careful treatment of interactional markers and oth­er communicators.
+    # This grouping can be marked with commas, or more explicitly through the use of prefixed / suffixed interactional markers
+    #   Values (bool):
+    #     true = keep satellite form
+    #     false = keep comma form
+    #   Default: false
+    satellite: false
+
+    # tone (↑ and ↓):
+    # -----------
+    # All the other CA marks can also be used in CHAT files.
+    # However, unlike CA, CHAT requires that every utterance have a final delimiter.
+    #   Values (bool):
+    #     true = keep tone marks
+    #     false = remove tone marks
+    #   Default: false
+    tone: false
+
+    # lengthening (:):
+    # -----------
+    # In order to use the colon as a separator, it must be surrounded by spaces. The colon is also used within words to mark lengthening.
+    #   Values (bool):
+    #     true = keep lengthening form
+    #     false = remove lengthening form
+    #   Default: false
+    lengthening: false
+
+    # prim_stress (ˈ):
+    # -----------
+    # The Unicode symbol (U02C8) can be used to mark primary stress.
+    #   Values (bool):
+    #     true = keep prim_stress form
+    #     false = remove prim_stress form
+    #   Default: false
+    prim_stress: false
+
+    # sec_stress (ˌ):
+    # -----------
+    # The Unicode symbol (U02CC) can be used to mark secondary stress.
+    #   Values (bool):
+    #     true = keep sec_stress form
+    #     false = remove sec_stress form
+    #   Default: false
+    sec_stress: false
+
+    # pause (^):
+    # -----------
+    # A pause between syllables. There is no special CHAT symbol for a filled pause.
+    #   Values (bool):
+    #     true = keep pause form
+    #     false = remove pause form
+    #   Default: false
+    pause: false
+
+    # blocking (≠):
+    # -----------
+    # Speakers with marked language disfluencies often engage in a form of word attack known as blocking
+    #   Values (bool):
+    #     true = keep blocking form
+    #     false = remove blocking form
+    #   Default: false
+    blocking: false
+
   # incomplete:
   # -----------
   # Process the incomplete and omitted words.

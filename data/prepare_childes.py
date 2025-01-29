@@ -54,6 +54,54 @@ class ChatConfig:
             raise yaml.YAMLError(f'Error parsing YAML configuration: {str(e)}')
 
 
+def process_basic(utterance: str, config: ChatConfig) -> str:
+    """Processes basic phonetic and prosodic markers in CHAT-format transcripts.
+
+    This function modifies the given utterance based on the configuration settings in `config.utterance['basic']`,
+    selectively removing or replacing various phonetic and prosodic markers.
+
+    Args:
+        utterance (str): The input utterance containing CHAT-format phonetic markers.
+        config (ChatConfig): Configuration object specifying which markers to process.
+
+    Returns:
+        str: The processed utterance with specified markers removed or replaced.
+    """
+    unid_basic = config.utterance['basic']
+
+    # Satellite (9.3)
+    if not unid_basic.get('satellite', False):
+        utterance = re.sub(r'\‡', ',', utterance)
+        utterance = re.sub(r'\„', ',', utterance)
+
+    # Tone Direction (9.8)
+    if not unid_basic.get('tone', False):
+        utterance = re.sub(r'\↑', '', utterance)
+        utterance = re.sub(r'\↓', '', utterance)
+
+    # Lengthening (9.7/9.9)
+    if not unid_basic.get('lengthening', False):
+        utterance = re.sub(r'\:', '', utterance)
+
+    # Primary Stress (9.9)
+    if not unid_basic.get('prim_stress', False):
+        utterance = re.sub(r'\ˈ', '', utterance)
+
+    # Secondary Stress (9.9)
+    if not unid_basic.get('prim_stress', False):
+        utterance = re.sub(r'\ˌ', '', utterance)
+
+    # Pause Between Syllables (9.9)
+    if not unid_basic.get('pause', False):
+        utterance = re.sub(r'\^', '', utterance)
+
+    # Blocking (9.9)
+    if not unid_basic.get('blocking', False):
+        utterance = re.sub(r'\≠', '', utterance)
+
+    return utterance
+
+
 def process_special_form(utterance: str, config: ChatConfig) -> str:
     """Process special form markers in CHAT format transcripts.
 
@@ -681,6 +729,9 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     speaker = ''
     if config.utterance.get('keep_speaker', True):
         speaker = '<' + speaker_id[1:] + '>'
+
+    # Process basic separators and markers
+    utterance = process_basic(utterance, config)
 
     # Process paralinguistic scope markers
     utterance = process_paralinguistic(utterance, config)

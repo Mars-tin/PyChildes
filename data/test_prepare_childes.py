@@ -27,6 +27,18 @@ class TestPrepareChildes(unittest.TestCase):
 
         self.assertEqual(pc.process_unidentifiable('<CHI> xxx yyy', config), '<CHI> <unk> <unk>')
 
+    def test_process_basic(self):
+        """Test the process_basic function."""
+        config = pc.ChatConfig(_TEST_CONFIG_PATH)
+        self.assertEqual(pc.process_basic('you need it „ right', config), 'you need it , right')
+        self.assertEqual(pc.process_basic('Mommy ‡ I want some', config), 'Mommy , I want some')
+        self.assertEqual(pc.process_basic('<booah:@b>', config), '<booah@b>')
+        self.assertEqual(pc.process_basic('store↓', config), 'store')
+        self.assertEqual(pc.process_basic('store↑', config), 'store')
+        self.assertEqual(pc.process_basic('ˌbaˈna:nas', config), 'bananas')
+        self.assertEqual(pc.process_basic('rhi^noceros', config), 'rhinoceros')
+        self.assertEqual(pc.process_basic('rhi≠noceros', config), 'rhinoceros')
+
     def test_process_special_form(self):
         """Test the process_special_form function."""
         config = pc.ChatConfig(_TEST_CONFIG_PATH)
