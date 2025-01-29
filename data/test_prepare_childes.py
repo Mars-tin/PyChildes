@@ -59,6 +59,58 @@ class TestPrepareChildes(unittest.TestCase):
             '<evt>waving hands and then continue until the end marked by<sep><0></evt>'
         )
 
+    def test_process_linker(self):
+        """Test the process_linker function."""
+        config = pc.ChatConfig(_TEST_CONFIG_PATH)
+        self.assertEqual(pc.process_linker(
+            'smells good enough for +...', config),
+            'smells good enough for ...'
+        )
+        self.assertEqual(pc.process_linker(
+            'smells good enough for +..?', config),
+            'smells good enough for ...?'
+        )
+        self.assertEqual(pc.process_linker(
+            'smells good enough for +!?', config),
+            'smells good enough for !?'
+        )
+        self.assertEqual(pc.process_linker(
+            'what did you +/.', config),
+            'what did you ...'
+        )
+        self.assertEqual(pc.process_linker(
+            '+, with your spoon.', config),
+            'with your spoon.'
+        )
+        self.assertEqual(pc.process_linker(
+            'what did you +/?', config),
+            'what did you ...?'
+        )
+        self.assertEqual(pc.process_linker(
+            'smells good enough for +//.', config),
+            'smells good enough for ...'
+        )
+        self.assertEqual(pc.process_linker(
+            'smells good enough for +//?', config),
+            'smells good enough for ...?'
+        )
+        self.assertEqual(pc.process_linker(
+            'smells good enough for me +.', config),
+            'smells good enough for me .'
+        )
+        self.assertEqual(pc.process_linker(
+            'and then the little bear said +\"/.', config),
+            'and then the little bear said :'
+        )
+        self.assertEqual(pc.process_linker(
+            '+\" if you do, I\'ll carry you on my back.', config),
+            "if you do, I\'ll carry you on my back."
+        )
+        self.assertEqual(pc.process_linker(
+            'the little bear said +\".', config),
+            'the little bear said .'
+        )
+
     def test_process_special_form(self):
         """Test the process_special_form function."""
         config = pc.ChatConfig(_TEST_CONFIG_PATH)

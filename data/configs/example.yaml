@@ -131,6 +131,111 @@ utterance:
     #   Default: false
     pause: false
 
+  # linkers:
+  # -----------
+  # Process special utterance terminators and linkers.
+  #   Refer To: Sec. 9.11, 9.12
+  linkers:
+
+    # trail_off (+...):
+    # -----------
+    # The trailing off or incompletion marker (plus sign followed by three periods)
+    # is the terminator for an incomplete, but not interrupted, utterance.
+    # Trailing off occurs when speakers shift attention away from what they are saying,
+    # sometimes even forgetting what they were going to say.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...)
+    #   Default: false
+    trail_off: false
+
+    # trail_off_q (+..?):
+    # -----------
+    # If the utterance that is being trailed off has the shape of a question,
+    # then this symbol should be used.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...) and a question mark
+    #   Default: false
+    trail_off_q: false
+
+    # exclamation (+..?):
+    # -----------
+    # When a question is produced with great amazement or puzzlement,
+    # it can be coded us­ing this symbol.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove "+"
+    #   Default: false
+    exclamation: false
+
+    # interruption (+/.):
+    # -----------
+    # This symbol is used for an utterance that is incomplete
+    # because one speaker is interrupt­ed by another speaker.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark +/. as ellipsis (...) and remove +,
+    #   Default: false
+    interruption: false
+
+    # interruption_q (+/?):
+    # -----------
+    # This symbol is used for an utterance that is being interrupted has the shape of a question.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...) and a question mark
+    #   Default: false
+    interruption_q: false
+
+    # interruption_self (+//.):
+    # -----------
+    # Some researchers wish to be able to distinguish between incompletions
+    # involving a trailing off and incompletions involving an actual self-interruption.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...)
+    #   Default: false
+    interruption_self: false
+
+    # interruption_self_q (+//.):
+    # -----------
+    # If the utterance being self-interrupted is a question.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...) and a question mar
+    #   Default: false
+    interruption_self_q: false
+
+    # trans_break (+.):
+    # -----------
+    # Break utterances at phrasal boundaries in order to mark overlaps.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as a period
+    #   Default: false
+    trans_break: false
+
+    # [TODO] quote_follow (+"/. and +"):
+    # -----------
+    # The use of the +"/. symbol is linked to the use of the +" symbol.
+    # Breaking up quoted material in this way allows us to maintain the rule
+    # that each separate utterance should be on a separate line.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as a colon and remove quotation marks
+    #   Default: false
+    quote_follow: false
+
+    # [TODO] quote_precede (+".):
+    # -----------
+    # This symbol is used when the material being directly quoted precedes the main clause
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as a period and remove quotation marks
+    #   Default: false
+    quote_precede: false
+
   # incomplete:
   # -----------
   # Process the incomplete and omitted words.

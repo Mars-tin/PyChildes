@@ -115,6 +115,69 @@ def process_basic(utterance: str, config: ChatConfig) -> str:
     return utterance
 
 
+def process_linker(utterance: str, config: ChatConfig) -> str:
+    """Processes special utterance terminators and linkers in the given text.
+
+    This function replaces specific transcription markers that denote special
+    linguistic events, such as trailing off, interruptions, self-interruptions,
+    and transcription breaks. It modifies the input `utterance` based on the
+    settings in `config.utterance['linkers']`.
+
+    Args:
+        utterance (str): The input text containing special transcription markers.
+        config (ChatConfig): Configuration object that specifies which markers
+                             should be processed.
+
+    Returns:
+        str: The processed utterance with special markers replaced based on settings.
+    """
+    unid_linkers = config.utterance['linkers']
+
+    # Trailing Off (9.11)
+    if not unid_linkers.get('trail_off', False):
+        utterance = re.sub(r'\+\.\.\.', '...', utterance)
+
+    # Trailing Off of a Question (9.11)
+    if not unid_linkers.get('trail_off_q', False):
+        utterance = re.sub(r'\+\.\.\?', r'...?', utterance)
+
+    # Question With Exclamation (9.11)
+    if not unid_linkers.get('exclamation', False):
+        utterance = re.sub(r'\+\!\?', '!?', utterance)
+
+    # Interruption (9.11)
+    if not unid_linkers.get('interruption', False):
+        utterance = re.sub(r'\+\/\.', '...', utterance)
+        utterance = re.sub(r'\+\,\s', '', utterance)
+
+    # Interruption of a Question (9.11)
+    if not unid_linkers.get('interruption_q', False):
+        utterance = re.sub(r'\+\/\?', '...?', utterance)
+
+    # Self-Interruption (9.11)
+    if not unid_linkers.get('interruption_self', False):
+        utterance = re.sub(r'\+\/\/\.', '...', utterance)
+
+    # Self-Interrupted Question (9.11)
+    if not unid_linkers.get('interruption_self_q', False):
+        utterance = re.sub(r'\+\/\/\?', '...?', utterance)
+
+    # Transcription Break (9.11)
+    if not unid_linkers.get('trans_break', False):
+        utterance = re.sub(r'\+\.', '.', utterance)
+
+    # [TODO] Quotation Follows and Precedes (9.11)
+    # Currently just remove all quotation marks.
+    # In the future can add a pair of quotation marks to the sequence.
+    if not unid_linkers.get('quote_precede', False):
+        utterance = re.sub(r'\+\"\.', '.', utterance)
+    if not unid_linkers.get('quote_follow', False):
+        utterance = re.sub(r'\+\"\/\.', ':', utterance)
+        utterance = re.sub(r'\+\"\s', '', utterance)
+
+    return utterance
+
+
 def process_local_event(utterance: str, config: ChatConfig) -> str:
     """Processes local events in the given utterance and replaces them with formatted tags.
 
@@ -821,6 +884,9 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
 
     # Process basic separators and markers
     utterance = process_basic(utterance, config)
+
+    # Process special utterance terminators and linkers
+    utterance = process_linker(utterance, config)
 
     # Process incomplete words, must go after basic
     utterance = process_incomplete(utterance, config)
