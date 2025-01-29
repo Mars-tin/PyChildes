@@ -6,7 +6,7 @@ filtering lines that begin with asterisk (*) which typically denote speaker turn
 
 import os
 import re
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import yaml
 from utils import DataIntegrityError
@@ -928,6 +928,43 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     return True, speaker + ' ' + utterance
 
 
+def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
+    """Split an interposed utterance into separate speaker-labeled lines.
+
+    Args:
+        input_line (str): The input line containing interposed speech.
+
+    Returns:
+        str: The reformatted utterance with separate speaker designations.
+    """
+    speaker_id, utterance = input_line.split(':\t', 1)
+
+    # Locate the split point
+    split_marker = '&*'
+    if split_marker in utterance:
+        first_part, remaining = utterance.split(split_marker, 1)
+
+        # Identify the next speaker token (e.g., "MOT")
+        interpose_speaker, second_part = remaining.split(':', 1)
+        second_part = second_part.strip()
+
+        # Generate reformatted output
+        if config.utterance.get('interposed', True):
+
+            input_line_split = [
+                '{speaker_id}:\t{first_part.strip()} +.',
+                f"*{interpose_speaker}:\t{second_part.split(' ', 1)[0]} .",
+                f"{speaker_id}:\t{' '.join(second_part.split(' ')[1:])}"
+            ]
+
+        else:
+            input_line_split = [
+                f"{speaker_id}:\t{first_part.strip()} {' '.join(second_part.split(' ')[1:])}",
+            ]
+
+    return input_line_split
+
+
 def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     """Process a dependent tier from the input.
 
@@ -986,20 +1023,37 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
 
             keep_data = True
 
+            # Header
             if line.startswith('@'):
                 keep_data, line = process_header(line, config)
+                lines_proc = [line] if keep_data else []
 
+            # Utterance
             elif line.startswith('*'):
-                keep_data, line = process_utterance(line, config)
 
+                # Default
+                if '&*' not in line:
+                    keep_data, line = process_utterance(line, config)
+                    lines_proc = [line] if keep_data else []
+
+                # Interposed Words
+                else:
+                    lines_proc = []
+                    lines_split = split_interposed(line, config)
+                    for line_split in lines_split:
+                        keep_data, line = process_utterance(line_split, config)
+                        if keep_data:
+                            lines_proc.append(line)
+
+            # Dependent_Tier
             elif line.startswith('%'):
                 keep_data, line = process_dependent_tier(line, config)
+                lines_proc = [line] if keep_data else []
 
             else:
                 raise DataIntegrityError(data=line)
 
-            if keep_data:
-                processed_lines.append(line)
+            processed_lines.extend(lines_proc)
 
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, 'w', encoding='utf-8') as f:

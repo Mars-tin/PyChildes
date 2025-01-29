@@ -51,6 +51,18 @@ utterance:
   #   Default: true
   keep_speaker: true
 
+  # interposed (&*):
+  # -----------
+  # It is often convenient to mark the interposition or insertion of a short comment word
+  # in a back channel, within a longer discourse from the speaker who has the floor without
+  # breaking up the utterance of the main speaker
+  #   Refer To: Sec. 9.10.2
+  #   Values (bool):
+  #     true = keep interposed and split
+  #     false = remove interposed word
+  #   Default: true
+  interposed: false
+
   # nonverbal:
   # -----------
   # Process the `0` symbol to mark cases where only one form is used.
