@@ -69,8 +69,12 @@ def process_basic(utterance: str, config: ChatConfig) -> str:
     """
     unid_basic = config.utterance['basic']
 
-    # Remove U+0015 (Negative Acknowledge)
+    # Remove file errors, i.e., U+0015 (Negative Acknowledge)
     utterance = re.sub(r'\s\u0015.*?\u0015', '', utterance)
+
+    # [TODO] Audio and Video Time Marks (10.1)
+    # For now just remove
+    utterance = re.sub(r'\s\·.*?\·', '', utterance)
 
     # Satellite (9.3)
     if not unid_basic.get('satellite', False):
