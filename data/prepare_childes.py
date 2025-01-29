@@ -82,7 +82,7 @@ def process_basic(utterance: str, config: ChatConfig) -> str:
         utterance = re.sub(r'\↑', '', utterance)
         utterance = re.sub(r'\↓', '', utterance)
 
-    # Lengthening (9.7/9.9)
+    # Lengthening (9.7 / 9.9)
     if not unid_basic.get('lengthening', False):
         utterance = re.sub(r'\:', '', utterance)
 
@@ -94,13 +94,99 @@ def process_basic(utterance: str, config: ChatConfig) -> str:
     if not unid_basic.get('prim_stress', False):
         utterance = re.sub(r'\ˌ', '', utterance)
 
-    # Pause Between Syllables (9.9)
-    if not unid_basic.get('pause', False):
-        utterance = re.sub(r'\^', '', utterance)
-
     # Blocking (9.9)
     if not unid_basic.get('blocking', False):
         utterance = re.sub(r'\≠', '', utterance)
+
+    # Pauses (9.9 / 9.10.4)
+    if not unid_basic.get('pause', False):
+
+        # Pauses can take the following forms:
+        # 1. (...) - Arbitrary number of dots inside parentheses.
+        # 2. (xx.xx) - A decimal number inside parentheses.
+        # 3. (xx:xx) - A minute:second format inside parentheses.
+        # 4. (xx:xx.xx) - A minute:second.fraction format inside parentheses.
+        pause_pattern = r'\(\.{1,}\)\s?|\(\d+\.\d*\)\s?|\(\d+:\d+\.\d*\)\s?|\(\d+:\d+\)\s?'
+        utterance = re.sub(pause_pattern + r'\)', '', utterance)
+
+        # 5. (ww^ww) - Pause between syllables
+        utterance = re.sub(r'\^', '', utterance)
+
+    return utterance
+
+
+def process_local_event(utterance: str, config: ChatConfig) -> str:
+    """Processes local events in the given utterance and replaces them with formatted tags.
+
+    This function identifies and processes two types of events in the input `utterance`:
+    It applies replacements in reverse order to maintain correct character positions.
+
+    Args:
+        utterance (str): The input text containing event markers.
+        config (ChatConfig): Configuration object containing utterance-related settings.
+
+    Returns:
+        str: The processed utterance with events replaced by formatted tags or tokens.
+    """
+    # unid_local = config.utterance['local']
+    env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+    nonverbal_token = config.utterance.get('nonverbal', '<0>')
+    replacements = []
+
+    # Simple Events &= (9.10.l)
+    pattern = r'&=(\w+)(?::(\w+))?'
+
+    # Find all matches in the utterance
+    regions = re.finditer(pattern, utterance)
+
+    # Process each match and construct replacements
+    for match in regions:
+
+        start, end = match.span()
+        verb = match.group(1)
+        noun = match.group(2) if match.group(2) else None
+        event = f'{verb} {noun}' if noun else verb
+
+        if env_tag != 'null':
+            replacements.append((
+                start, end,
+                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+            ))
+        else:
+            replacements.append((
+                start, end,
+                f'{nonverbal_token}'
+            ))
+
+    # Complex Local Events (9.10.3)
+    pattern = r'&\{(l|n)=(\w+)(?::(\w+))?\s*(.*?)\s*&}\1=\2(?::\3)?'
+
+    # Find all matches in the utterance
+    regions = re.finditer(pattern, utterance)
+
+    # Process each match and construct replacements
+    for match in regions:
+
+        start, end = match.span()
+        verb = match.group(2)
+        noun = match.group(3) if match.group(3) else None
+        details = match.group(4).strip()
+        event = f'{verb} {noun} {details}'.strip() if noun else f'{verb} {details}'.strip()
+
+        if env_tag != 'null':
+            replacements.append((
+                start, end,
+                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+            ))
+        else:
+            replacements.append((
+                start, end,
+                f'{nonverbal_token}'
+            ))
+
+    # Apply replacements from end to start
+    for start, end, replacement in sorted(replacements, reverse=True):
+        utterance = utterance[:start] + replacement + utterance[end:]
 
     return utterance
 
@@ -410,7 +496,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     all_identifiers = [
         '=!', '=?', '=', '!!', '!', '#', ':', '::', '%', '?',
         '/', 'x', '//', '///', '/-', '/?', '*',
-        'e', '+', '-', '^c'
+        'e', '+', '-', '^', '^c'
     ]
     all_identifiers = sorted(all_identifiers, key=len, reverse=True)
 
@@ -531,8 +617,8 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                         start, end+1, ''
                     ))
 
-            # Paralinguistic Material (10.2)
-            elif identifier == '=!':
+            # Complex Local Events (9.10.3) and Paralinguistic Material (10.2)
+            elif identifier == '^' or identifier == '=!':
                 tag = scope_cfg.get('paralinguistic', 'evt')
                 if tag != 'null':
                     replacements.append((
@@ -736,7 +822,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # Process basic separators and markers
     utterance = process_basic(utterance, config)
 
-    # Process incomplete words
+    # Process incomplete words, must go after basic
     utterance = process_incomplete(utterance, config)
 
     # Process paralinguistic scope markers
@@ -744,6 +830,9 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
 
     # Process special forms, must go after paralinguistic
     utterance = process_special_form(utterance, config)
+
+    # Process local events, must go after paralinguistic
+    utterance = process_local_event(utterance, config)
 
     # Process disfluencies
     utterance = process_disfluencies(utterance, config)

@@ -113,15 +113,6 @@ utterance:
     #   Default: false
     sec_stress: false
 
-    # pause (^):
-    # -----------
-    # A pause between syllables. There is no special CHAT symbol for a filled pause.
-    #   Values (bool):
-    #     true = keep pause form
-    #     false = remove pause form
-    #   Default: false
-    pause: false
-
     # blocking (≠):
     # -----------
     # Speakers with marked language disfluencies often engage in a form of word attack known as blocking
@@ -130,6 +121,15 @@ utterance:
     #     false = remove blocking form
     #   Default: false
     blocking: false
+
+    # pause (^ and (...)):
+    # -----------
+    # A pause between syllables. There is no special CHAT symbol for a filled pause.
+    #   Values (bool):
+    #     true = keep pause form
+    #     false = remove pause form
+    #   Default: false
+    pause: false
 
   # incomplete:
   # -----------
@@ -439,7 +439,7 @@ utterance:
   #   Refer To: Sec. 10.6
   scoped:
 
-    # paralinguistic ([=!]):
+    # paralinguistic ([^] and [=!]):
     # -----------
     # Paralinguistic events, such as coughing, laughing, or yelling can be marked by using square brackets,
     # the `=!` symbol, a space, and then text describing the event.
