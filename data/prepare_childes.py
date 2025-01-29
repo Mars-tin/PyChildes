@@ -897,6 +897,10 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # Process special forms, must go after paralinguistic
     utterance = process_special_form(utterance, config)
 
+    # Process nonverbal token, before local event but after paralinguistic
+    marker = config.utterance.get('nonverbal', '<0>')
+    utterance = re.sub(r'0', marker, utterance)
+
     # Process local events, must go after paralinguistic
     utterance = process_local_event(utterance, config)
 
@@ -908,10 +912,6 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
 
     # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
     # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
-
-    # Process nonverbal token
-    marker = config.utterance.get('nonverbal', '<0>')
-    utterance = re.sub(r'0', marker, utterance)
 
     return True, speaker + ' ' + utterance
 
