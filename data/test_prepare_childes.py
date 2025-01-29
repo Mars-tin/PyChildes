@@ -30,6 +30,7 @@ class TestPrepareChildes(unittest.TestCase):
     def test_process_basic(self):
         """Test the process_basic function."""
         config = pc.ChatConfig(_TEST_CONFIG_PATH)
+        self.assertEqual(pc.process_basic('how to do it ? 36000_38606', config), 'how to do it ?')
         self.assertEqual(pc.process_basic('you need it „ right', config), 'you need it , right')
         self.assertEqual(pc.process_basic('Mommy ‡ I want some', config), 'Mommy , I want some')
         self.assertEqual(pc.process_basic('<booah:@b>', config), '<booah@b>')

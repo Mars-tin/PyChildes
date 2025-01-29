@@ -69,6 +69,9 @@ def process_basic(utterance: str, config: ChatConfig) -> str:
     """
     unid_basic = config.utterance['basic']
 
+    # Remove U+0015 (Negative Acknowledge)
+    utterance = re.sub(r'\s\u0015.*?\u0015', '', utterance)
+
     # Satellite (9.3)
     if not unid_basic.get('satellite', False):
         utterance = re.sub(r'\‡', ',', utterance)
@@ -733,6 +736,9 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # Process basic separators and markers
     utterance = process_basic(utterance, config)
 
+    # Process incomplete words
+    utterance = process_incomplete(utterance, config)
+
     # Process paralinguistic scope markers
     utterance = process_paralinguistic(utterance, config)
 
@@ -741,9 +747,6 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
 
     # Process disfluencies
     utterance = process_disfluencies(utterance, config)
-
-    # Process incomplete words
-    utterance = process_incomplete(utterance, config)
 
     # Process unidentifiable markers
     utterance = process_unidentifiable(utterance, config)
