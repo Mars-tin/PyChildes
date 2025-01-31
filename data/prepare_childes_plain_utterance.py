@@ -914,7 +914,12 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
     # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
 
-    return True, speaker + ' ' + utterance
+    words = utterance.split()
+    words = re.findall(r"<\w+>|\b\w+'\w+|\b\w+", utterance)
+    annotated_words = [f'{word}:{speaker}' for word in words]
+    utterance = ' '.join(annotated_words) + ' '
+
+    return True, utterance
 
 
 def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
@@ -1094,6 +1099,6 @@ if __name__ == '__main__':
 
     # Example usage
     input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
-    output_file = 'prep/childes/example.cha'
-    config_path = 'configs/example.yaml'
+    output_file = 'prep/childes/plain_utterance.cha'
+    config_path = 'configs/plain_utterance.yaml'
     process_cha_file(input_file, output_file, config_path)

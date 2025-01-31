@@ -580,7 +580,7 @@ utterance:
     #     'unk' = mark it as <unk>
     #     'null' = remove the term
     #   Default: 'unk'
-    nonwords: 'unk'
+    nonwords: 'null'
 
   # scoped:
   # -----------
@@ -602,7 +602,7 @@ utterance:
     # the `=!` symbol, a space, and then text describing the event.
     #   Values (str): 'null' or '<your_choice_of_paralinguistic>'
     #   Default: 'evt' (angle brackets automatically apply if not null)
-    paralinguistic: 'EVT'
+    paralinguistic: 'null'
 
     # explanation ([=] and [%]):
     # -----------
@@ -610,7 +610,7 @@ utterance:
     # This symbol is helpful for specifying the deictic identity of objects and people.
     #   Values (str): 'null' or '<your_choice_of_explanation>'
     #   Default: 'null' (angle brackets automatically apply if not null)
-    explanation: 'exp'
+    explanation: 'null'
 
     # replacement ([:] and [::]):
     # -----------
@@ -629,7 +629,7 @@ utterance:
     # [!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
     #   Values (str): 'null' or '<your_choice_of_stressing>'
     #   Default: 'stress' (angle brackets automatically apply if not null)
-    stressing: 'stress'
+    stressing: 'null'
 
     # contra_stressing ([!!]):
     # -----------
@@ -637,7 +637,7 @@ utterance:
     # [!!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
     #   Values (str): 'null' or '<your_choice_of_stressing>'
     #   Default: 'stress' (angle brackets automatically apply if not null)
-    contra_stressing: 'stress'
+    contra_stressing: 'null'
 
     # alternative ([=?]):
     # -----------
@@ -785,7 +785,7 @@ dependent:
   #     true = keep dependent tiers
   #     false = remove dependent tiers
   #   Default: true
-  keep_data: true
+  keep_data: false
 
   # action:
   # -----------
@@ -800,4 +800,4 @@ dependent:
     #     true = keep action dependent tiers
     #     false = remove action dependent tiers
     #   Default: true
-    keep_data: true
+    keep_data: false
