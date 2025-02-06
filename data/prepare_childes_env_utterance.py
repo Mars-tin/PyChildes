@@ -3,7 +3,7 @@
 This module provides functionality to process CHAT format files, specifically
 filtering lines that begin with asterisk (*) which typically denote speaker turns.
 
-This processing pipeline only keeps the utterances.
+This processing pipeline only keeps the utterances and environment context.
 """
 
 import os
@@ -916,6 +916,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
     # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
 
+    speaker = '<LAN>'
     words = re.findall(r"<\w+>|\b\w+'\w+|\b\w+", utterance)
     annotated_words = [f'{word}:{speaker}' for word in words]
     utterance = ' '.join(annotated_words) + ' '
@@ -971,7 +972,38 @@ def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, s
             - bool: True if the line will be added to the processed file.
             - str: The processed line.
     """
-    return False, input_line
+    try:
+        tier, content = input_line.split(':\t')
+        tier = tier[1:]
+
+    except ValueError:
+        raise DataIntegrityError(
+            f'Invalid dependent tier format: {input_line}',
+            input_line
+        )
+
+    # Get configuration
+    if not config.dependent.get('keep_data', True):
+        return False, ''
+
+    # Process action tiers
+    if tier == 'act':
+
+        if config.dependent['action'].get('keep_data', True):
+
+            env_tag = '<ENV>'
+            words = re.findall(r"<\w+>|\b\w+'\w+|\b\w+", content.strip())
+            annotated_words = [f'{word}:{env_tag}' for word in words]
+            content = ' '.join(annotated_words) + ' '
+
+        else:
+            return False, ''
+
+    else:
+        # TODO: complete parsing dependent tiers
+        return False, ''
+
+    return True, content
 
 
 def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
@@ -985,7 +1017,7 @@ def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
             - bool: True if the line will be added to the processed file.
             - str: The processed line.
     """
-    return False, input_line
+    return config.header.get('keep_data', False), input_line
 
 
 def process_cha_file(input_file: str, output_file: str, config_path: str) -> None:
@@ -1069,6 +1101,6 @@ if __name__ == '__main__':
 
     # Example usage
     input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
-    output_file = 'prep/childes/plain_utterance.cha'
-    config_path = 'configs/plain_utterance.yaml'
+    output_file = 'prep/childes/event_utterance.cha'
+    config_path = 'configs/event_utterance.yaml'
     process_cha_file(input_file, output_file, config_path)
