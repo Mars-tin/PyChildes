@@ -1,0 +1,803 @@
+# ==========================
+# Configuration for .cha file processing from Childes
+# ==========================
+# @schema: https://talkbank.org/manuals/CHAT.html
+# @version: 1.1.0
+# @description: Configuration schema for .cha processing pipeline
+# @required: ['header', 'utterance', 'dependent']
+
+
+# Headers (@)
+# -----------
+# A header is a line of text that gives information about the participants and the setting.
+# All headers begin with the '@' sign.
+# See Sec. 7 in https://talkbank.org/manuals/CHAT.html#_Toc176356502
+header:
+
+  # keep_data:
+  # -----------
+  # Controls header retention in output file
+  #   Values (bool):
+  #     true = keep headers
+  #     false = remove headers
+  #   Default: false
+  keep_data: false
+
+
+# Utterances (*)
+# -----------
+# Lines beginning with * indicate what was actually said. These are called 'main lines.'
+# Each main line/tier should code one and only one utterance.
+# When a speaker produces several utterances in a row, code each with a new main line.
+# The following arguments control the processing of main tiers.
+utterance:
+
+  # keep_data:
+  # -----------
+  # Controls utterance retention in output file.
+  #   Values (bool):
+  #     true = keep utterances
+  #     false = remove utterances
+  #   Default: true
+  keep_data: true
+
+  # keep_speaker:
+  # -----------
+  # Controls speaker token retention in output file.
+  #   Refer To: Sec. 5.1.7
+  #   Values (bool):
+  #     true = keep speaker tokens
+  #     false = remove speaker tokens
+  #   Default: true
+  keep_speaker: true
+
+  # interposed (&*):
+  # -----------
+  # It is often convenient to mark the interposition or insertion of a short comment word
+  # in a back channel, within a longer discourse from the speaker who has the floor without
+  # breaking up the utterance of the main speaker
+  #   Refer To: Sec. 9.10.2
+  #   Values (bool):
+  #     true = keep interposed and split
+  #     false = remove interposed word
+  #   Default: true
+  interposed: false
+
+  # nonverbal:
+  # -----------
+  # Process the `0` symbol to mark cases where only one form is used.
+  # In the main lines, it is usually used to indicate that there is an action but no speech.
+  #   Refer To: Sec. 16.4
+  #   Values (str): '<your_choice_of_silence_token>'
+  #   Default: '<0>'
+  nonverbal: '<0>'
+
+  # basic:
+  # -----------
+  # Process the single char markers and separators.
+  #   Refer To: Sec. 9.3, 9.6, 9.8, 9.9
+  basic:
+
+    # satellite (‡ and „):
+    # -----------
+    # Segmentation into utterances can be facilitated through careful treatment of interactional markers and oth­er communicators.
+    # This grouping can be marked with commas, or more explicitly through the use of prefixed / suffixed interactional markers
+    #   Values (bool):
+    #     true = keep satellite form
+    #     false = keep comma form
+    #   Default: false
+    satellite: false
+
+    # tone (↑ and ↓):
+    # -----------
+    # All the other CA marks can also be used in CHAT files.
+    # However, unlike CA, CHAT requires that every utterance have a final delimiter.
+    #   Values (bool):
+    #     true = keep tone marks
+    #     false = remove tone marks
+    #   Default: false
+    tone: false
+
+    # lengthening (:):
+    # -----------
+    # In order to use the colon as a separator, it must be surrounded by spaces. The colon is also used within words to mark lengthening.
+    #   Values (bool):
+    #     true = keep lengthening form
+    #     false = remove lengthening form
+    #   Default: false
+    lengthening: false
+
+    # prim_stress (ˈ):
+    # -----------
+    # The Unicode symbol (U02C8) can be used to mark primary stress.
+    #   Values (bool):
+    #     true = keep prim_stress form
+    #     false = remove prim_stress form
+    #   Default: false
+    prim_stress: false
+
+    # sec_stress (ˌ):
+    # -----------
+    # The Unicode symbol (U02CC) can be used to mark secondary stress.
+    #   Values (bool):
+    #     true = keep sec_stress form
+    #     false = remove sec_stress form
+    #   Default: false
+    sec_stress: false
+
+    # blocking (≠):
+    # -----------
+    # Speakers with marked language disfluencies often engage in a form of word attack known as blocking
+    #   Values (bool):
+    #     true = keep blocking form
+    #     false = remove blocking form
+    #   Default: false
+    blocking: false
+
+    # pause (^ and (...)):
+    # -----------
+    # A pause between syllables. There is no special CHAT symbol for a filled pause.
+    #   Values (bool):
+    #     true = keep pause form
+    #     false = remove pause form
+    #   Default: false
+    pause: false
+
+  # linkers:
+  # -----------
+  # Process special utterance terminators and linkers.
+  #   Refer To: Sec. 9.11, 9.12
+  linkers:
+
+    # trail_off (+...):
+    # -----------
+    # The trailing off or incompletion marker (plus sign followed by three periods)
+    # is the terminator for an incomplete, but not interrupted, utterance.
+    # Trailing off occurs when speakers shift attention away from what they are saying,
+    # sometimes even forgetting what they were going to say.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...)
+    #   Default: false
+    trail_off: false
+
+    # trail_off_q (+..?):
+    # -----------
+    # If the utterance that is being trailed off has the shape of a question,
+    # then this symbol should be used.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...) and a question mark
+    #   Default: false
+    trail_off_q: false
+
+    # exclamation (+..?):
+    # -----------
+    # When a question is produced with great amazement or puzzlement,
+    # it can be coded us­ing this symbol.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove "+"
+    #   Default: false
+    exclamation: false
+
+    # interruption (+/.):
+    # -----------
+    # This symbol is used for an utterance that is incomplete
+    # because one speaker is interrupt­ed by another speaker.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark +/. as ellipsis (...)
+    #   Default: false
+    interruption: false
+
+    # completion (+,):
+    # -----------
+    # The symbol +, can be used at the beginning of a main tier line
+    # to mark the completion of an utterance after an interruption.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove self-completion
+    #   Default: false
+    completion: false
+
+    # interruption_q (+/?):
+    # -----------
+    # This symbol is used for an utterance that is being interrupted has the shape of a question.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...) and a question mark
+    #   Default: false
+    interruption_q: false
+
+    # interruption_self (+//.):
+    # -----------
+    # Some researchers wish to be able to distinguish between incompletions
+    # involving a trailing off and incompletions involving an actual self-interruption.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...)
+    #   Default: false
+    interruption_self: false
+
+    # interruption_self_q (+//.):
+    # -----------
+    # If the utterance being self-interrupted is a question.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as ellipsis (...) and a question mar
+    #   Default: false
+    interruption_self_q: false
+
+    # trans_break (+.):
+    # -----------
+    # Break utterances at phrasal boundaries in order to mark overlaps.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as a period
+    #   Default: false
+    trans_break: false
+
+    # uptake (+^):
+    # -----------
+    # Sometimes an utterance of one speaker follows quickly on the heels
+    # of the last utterance of the preceding speaker without the customary
+    # short pause between utterances.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove the update mark
+    #   Default: false
+    uptake: false
+
+    # latching (++):
+    # -----------
+    # A variant form of the +, symbol is the ++ symbol
+    # which marks latching or the com­pletion of another speaker's utterance
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = remove the latching mark
+    #   Default: false
+    latching: false
+
+    # quote_follow (+"/. and +"):
+    # -----------
+    # The use of the +"/. symbol is linked to the use of the +" symbol.
+    # Breaking up quoted material in this way allows us to maintain the rule
+    # that each separate utterance should be on a separate line.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as a colon
+    #   Default: false
+    quote_follow: false
+
+    # [TODO] quote_precede (+".):
+    # -----------
+    # This symbol is used when the material being directly quoted precedes the main clause
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = mark as a period and remove quotation marks
+    #   Default: false
+    quote_precede: false
+
+    # [TODO] quote_utterance (+"):
+    # -----------
+    # It is placed at the beginning of an utterance that is being directly quoted.
+    #   Values (bool):
+    #     true = keep trailing form
+    #     false = simply remove quotation marks and keep utterance
+    #   Default: false
+    quote_utterance: false
+
+  # incomplete:
+  # -----------
+  # Process the incomplete and omitted words.
+  # In the main lines, words may also be incomplete or even fully omitted.
+  #   Refer To: Sec. 8.6
+  incomplete:
+
+    # noncompletion:
+    # -----------
+    # When a word is incomplete, but the intended meaning seems clear,
+    # insert the missing material within parentheses.
+    #   Values (bool):
+    #     true = keep complete form, remove parentheses
+    #     false = keep incomplete form, remove parentheses and content within
+    #   Default: true
+    noncompletion: true
+
+    # [TODO] omitted:
+    # -----------
+    # To code an omission, the `&=0` symbol is placed before a word/POS on the text tier.
+    #   Values (bool):
+    #     true = keep complete form, remove `&=0`
+    #     false = keep incomplete form, remove `&=0` and word after
+    #   Default: false
+    omitted: false
+
+  # specform (@):
+  # -----------
+  # Special form markers are used to identify words and word-like forms that
+  # are not present in dictionaries or which have some special status.
+  # The markers are placed at the end of a word after the ampersand symbol `@`.
+  #   Refer To: Sec. 8.3
+  specform:
+
+    # babbling (@b):
+    # -----------
+    # Babbling can be used to mark both low-level early babbling.
+    # These forms have no obvious meaning and are used just to have fun with sound.
+    #   Values (str): '<your_choice_of_babbling>'
+    #   Default: '<unk>'
+    babbling: '<unk>'
+
+    # child_invented (@c):
+    # -----------
+    # Child-invented forms are words created by the child sometimes
+    # from other words without obvious derivational morphology.
+    #   Values (str): '<your_choice_of_child_invented>'
+    #   Default: '<unk>'
+    child_invented: '<unk>'
+
+    # dialect (@d):
+    # -----------
+    # Dialect form is often an interesting general property of a transcript.
+    #   Values (bool):
+    #     true = keep dialect
+    #     false = make it <unk>
+    #   Default: true
+    dialect: true
+
+    # family_spec (@f):
+    # -----------
+    # Family-specific forms are much like child-invented forms that have been taken over by the whole family.
+    #   Values (str): '<your_choice_of_family_specific>'
+    #   Default: '<unk>'
+    family_spec: '<unk>'
+
+    # filled_pause (@fp):
+    # -----------
+    # Family-specific forms are much like child-invented forms that have been taken over by the whole family.
+    #   Values (bool):
+    #     true = make it <unk>
+    #     false = remove filled pause
+    #   Default: false
+    filled_pause: false
+
+    # general (@g):
+    # -----------
+    # General special form marking with @g can be used when all of the above fail.
+    #   Values (bool):
+    #     true = make it <unk>
+    #     false = remove general
+    #   Default: false
+    general: false
+
+    # interjections (@i):
+    # -----------
+    # Interjections can be indicated in standard ways,
+    # making the use of the @i nota­tion usually not necessary.
+    #   Values (bool):
+    #     true = keep interjections
+    #     false = make it <unk>
+    #   Default: true
+    interjections: true
+
+    # multi_letters (@k):
+    # -----------
+    # Multiple letters or strings of letters are marked as @k (as in 'kana').
+    #   Values (bool):
+    #     true = keep letters
+    #     false = make it <unk>
+    #   Default: true
+    multi_letters: true
+
+    # letter (@l):
+    # -----------
+    # Letters can either be transcribed with the @l marker or simply as single-charac­ter words.
+    #   Values (bool):
+    #     true = keep letters
+    #     false = make it <unk>
+    #   Default: true
+    letter: true
+
+    # neologism (@n):
+    # -----------
+    # Neologisms are meant to refer to morphological coinages.
+    #   Values (bool):
+    #     true = mark the mistakes after with special token <neo>
+    #     false = remove it
+    #   Default: false
+    neologism: false
+
+    # pcf (@p):
+    # -----------
+    # Phonological consistent forms (PCFs) are early forms that are phonologically consis­tent,
+    # but whose meaning is unclear to the transcriber. Often these forms are protomorphemes.
+    #   Values (bool):
+    #     true = keep pcfs
+    #     false = make it <unk>
+    #   Default: false
+    pcf: false
+
+    # metaling (@q):
+    # -----------
+    # Quoting or Metalinguistic reference can be used to either cite
+    # or quote single standard words or special child forms.
+    #   Values (bool):
+    #     true = mark with quotation marks
+    #     false = simply keep the word
+    #   Default: false
+    metaling: false
+
+    # singing (@si):
+    # -----------
+    # inging can be marked with @si.
+    # Sometimes the phrase that is being sung involves nonwords, as in lalaleloo@si.
+    #   Values (bool):
+    #     true = keep singing in the paralinguistic format
+    #     false = simply keep the word
+    #   Default: true
+    singing: true
+
+    # sign (@sl):
+    # -----------
+    # Sign language use can be indicated by the @sl.
+    #   Values (bool):
+    #     true = keep sign language in the paralinguistic format
+    #     false = simply keep the word
+    #   Default: false
+    sign: false
+
+    # sas (@sl):
+    # -----------
+    # Sign and speech use involves making a sign or informal sign in parallel
+    # with saying the word.
+    #   Values (bool):
+    #     true = keep sign language in the paralinguistic format
+    #     false = simply keep the word
+    #   Default: false
+    sas: false
+
+    # l2 (@s):
+    # -----------
+    # Second-language forms derive from some language not usually used in the home.
+    # These are marked with a second letter for the first letter of the second language.
+    #   Values (bool):
+    #     true = keep second language
+    #     false = make it <unk>
+    #   Default: true
+    l2: true
+
+    # onomatopoeia (@o):
+    # -----------
+    # Onomatopoeias include animal sounds and attempts to imitate natural sounds.
+    #   Values (bool):
+    #     true = keep onomatopoeia
+    #     false = make it <unk>
+    #   Default: true
+    onomatopoeia: true
+
+    # testword (@t):
+    # -----------
+    # Test words are nonce forms generated by the investigators to
+    # test the productiv­ity of the child's grammar.
+    #   Values (bool):
+    #     true = keep test word
+    #     false = make it <unk>
+    #   Default: true
+    testword: true
+
+    # unibet (@u):
+    # -----------
+    # Unibet transcription can be given on the main line by using the @u marker.
+    # However, if many such forms are being noted, it may be better to construct a @pho line.
+    #   Values (bool):
+    #     true = keep transcription
+    #     false = mark it as a phonological token
+    #   Default: false
+    unibet: false
+
+    # wordplay (@wp):
+    # -----------
+    # Word play in older children produces forms that may sound much like the forms of babbling,
+    # but which arise from a slightly different process.
+    #   Values (str): '<your_choice_of_word_play>'
+    #   Default: '<unk>'
+    wordplay: '<unk>'
+
+    # excluded (@x):
+    # -----------
+    # Excluded forms can be marked with @x, optionally followed by a user-defined code.
+    # These forms will be tagged as '<unk>' by MOR.
+    #   Values (bool):
+    #     true = keep original form
+    #     false = mark it as <unk>
+    #   Default: false
+    excluded: false
+
+  # unidentifiable:
+  # -----------
+  # Process the unidentifiable sound or group of sounds onto special tokens.
+  #   Refer To: Sec. 8.4
+  unidentifiable:
+
+    # unintelligible (xxx):
+    # -----------
+    # Use the symbol `xxx` when you cannot hear or understand what the speaker is saying.
+    #   Values (str): '<your_choice_of_unintelligible>'
+    #   Default: '<unk>'
+    unintelligible: '<unk>'
+
+    # phonological (yyy):
+    # -----------
+    # Use the symbol `yyy` when all materials are phonologically coded on a `%pho` line.
+    #   Values (str): '<your_choice_of_phonological>'
+    #   Default: '<pho>'
+    phonological: '<unk>'
+
+    # untranscribed (www):
+    # -----------
+    # Use the symbol `www` when a transcriber does not know how to transcribe or does not want to transcribe.
+    # This symbol must be used in conjunction with an `%exp` tier which is discussed
+    # in the chapter on dependent tiers.
+    #   Values (str): '<your_choice_of_untranscribed>'
+    #   Default: '<unk>'
+    untranscribed: '<unk>'
+
+  # disfluency:
+  # -----------
+  # Process the elements interrupt the smooth, fluent flow of language.
+  #   Refer To: Sec. 8.5
+  disfluency:
+
+    # fragment (&+):
+    # -----------
+    # Phonological fragments are marked with &+.
+    #   Values (str):
+    #     'keep' = keep phonological fragments
+    #     'unk' = mark it as <unk>
+    #     'null' = remove the term
+    #   Default: 'null'
+    fragment: 'null'
+
+    # filler (&-):
+    # -----------
+    # Fillers such as uh should be coded as &-uh. For English,
+    # this code should be used for all cases of &-um, &-uh, &-er, and &-eh.
+    #   Values (str):
+    #     'keep' = keep phonological filler
+    #     'unk' = mark it as <unk>
+    #     'null' = remove the term
+    #   Default: 'keep'
+    filler: 'keep'
+
+    # nonwords (&~):
+    # -----------
+    # This symbol is used for nonwords that are not fillers or phonological fragments
+    # and which are not characterized by any special form marker.
+    #   Values (str):
+    #     'keep' = keep phonological filler
+    #     'unk' = mark it as <unk>
+    #     'null' = remove the term
+    #   Default: 'unk'
+    nonwords: 'null'
+
+  # scoped:
+  # -----------
+  # Process the paralinguistic and duration scoping
+  #   Refer To: Sec. 10.2
+  # Explanations and Alternatives
+  #   Refer To: Sec. 10.3
+  # Retracing, Overlap, Exclusions, and Clauses
+  #   Refer To: Sec. 10.4
+  # Error Marking
+  #   Refer To: Sec. 10.5
+  # Precodes and Postcodes
+  #   Refer To: Sec. 10.6
+  scoped:
+
+    # paralinguistic ([^] and [=!]):
+    # -----------
+    # Paralinguistic events, such as coughing, laughing, or yelling can be marked by using square brackets,
+    # the `=!` symbol, a space, and then text describing the event.
+    #   Values (str): 'null' or '<your_choice_of_paralinguistic>'
+    #   Default: 'evt' (angle brackets automatically apply if not null)
+    paralinguistic: 'null'
+
+    # explanation ([=] and [%]):
+    # -----------
+    # The `=` symbol is used for brief explanations on the text tier.
+    # This symbol is helpful for specifying the deictic identity of objects and people.
+    #   Values (str): 'null' or '<your_choice_of_explanation>'
+    #   Default: 'null' (angle brackets automatically apply if not null)
+    explanation: 'null'
+
+    # replacement ([:] and [::]):
+    # -----------
+    # Earlier we discussed the use of a variety of nonstandard forms such as "gonna" and “hafta.".
+    # In order for MOR to morphemicize such words, the transcriber can use a replacement symbol that allows
+    # CLAN to substitute a target language form for the form ac­tually produced.
+    #   Values (bool):
+    #     true = keep corrected form
+    #     false = keep original form
+    #   Default: false
+    replacement: true
+
+    # stressing ([!]):
+    # -----------
+    # [!] with accompanying angle brackets to indicate that the phrase is stressed
+    # [!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
+    #   Values (str): 'null' or '<your_choice_of_stressing>'
+    #   Default: 'stress' (angle brackets automatically apply if not null)
+    stressing: 'null'
+
+    # contra_stressing ([!!]):
+    # -----------
+    # [!!] with accompanying angle brackets to indicate that the phrase is stressed
+    # [!!] without accompanying angle brackets to indicate that the pre­ceding word is stressed
+    #   Values (str): 'null' or '<your_choice_of_stressing>'
+    #   Default: 'stress' (angle brackets automatically apply if not null)
+    contra_stressing: 'null'
+
+    # alternative ([=?]):
+    # -----------
+    # Sometimes it is difficult to choose between two possible transcriptions for a word or group of words.
+    #   Values (bool):
+    #     true = keep alternative form
+    #     false = keep original form
+    #   Default: false
+    alternative: false
+
+    # repetition ([/] and [x N]):
+    # -----------
+    # The [/] symbol is used in those cases when a speaker begins to say something,
+    # stops and then repeats the earlier material without change.
+    #   Values (bool):
+    #     true = keep repetitions
+    #     false = remove repetitions
+    #   Default: false
+    repetition: false
+
+    # retracing ([//]):
+    # -----------
+    # This symbol is used when a speaker starts to say something, stops, repeats the basic phrase,
+    # changes the syntax but maintains the same idea.
+    #   Values (bool):
+    #     true = mark as ellipsis (...)
+    #     false = remove retracing
+    #   Default: true
+    retracing: true
+
+    # reformulation ([//]):
+    # -----------
+    # Sometimes retracings involve full and complete reformulations of the message without any specific corrections.
+    #   Values (bool):
+    #     true = mark as ellipsis (...)
+    #     false = remove reformulation
+    #   Default: true
+    reformulation: true
+
+    # false_start ([/-]):
+    # -----------
+    # False start without retracing.
+    #   Values (bool):
+    #     true = mark as ellipsis (...)
+    #     false = remove false start
+    #   Default: true
+    false_start: true
+
+    # clause ([^c]):
+    # -----------
+    # Clause Delimiter.
+    # If you wish to conduct analyses such as MLU and MLT based on clauses rather than utterances as the basic unit of analysis,
+    # you should mark the end of each clause with this symbol.
+    #   Values (bool):
+    #     true = keep the clause
+    #     false = remove the clause
+    #   Default: true
+    clause: true
+
+    # error ([*]):
+    # -----------
+    # Errors are marked by placing the [*] symbol after the error.
+    # Usually, the [*] marker occurs right after the error.
+    #   Values (bool):
+    #     true = remove the utterance
+    #     false = keep the utterance
+    #   Default: false
+    error: false
+
+    # precode ([- ISO]):
+    # -----------
+    # Language precodes are used to mark the switch to a different language in multilingual interactions.
+    #   Values (bool):
+    #     true = remove the precoded utterance
+    #     false = keep the precoded utterance
+    #   Default: false
+    precode: false
+
+    # postcode ([+ ISO]):
+    # -----------
+    # Postcodes are symbols placed into square brackets at the end of the utterance.
+    # They should include the plus sign and a space after the left bracket.
+    # There is no predefined set of postcodes.
+    #   Values (bool):
+    #     true = remove the postcoded utterance
+    #     false = keep the postcoded utterance
+    #   Default: false
+    postcode: false
+
+    # back_channel ([+ bch]):
+    # -----------
+    # Sometimes we want to have a way of marking utterances that are
+    # not really a part of the main interaction, but are in some back channel.
+    #   Values (bool):
+    #     true = remove the back channel utterance
+    #     false = keep the back channel utterance
+    #   Default: true
+    back_channel: true
+
+    # include_turn ([+ trn]):
+    # -----------
+    # The [+ trn] postcode can force the MLT command to treat an utterance
+    # as a turn when it would normally not be treated as a turn.
+    #   Values (bool):
+    #     true = keep the added turn
+    #     false = remove the added turn
+    #   Default: true
+    include_turn: true
+
+    # excluded ([e] or [+ exc]):
+    # -----------
+    # Certain types of analysis focus on the speaker’s ability to produce task-relevant material.
+    # For example, in a picture description task, it may be useful to exclude material
+    # that is not relevant to the actual description of the picture.
+    #   Values (bool):
+    #     true = remove the contents
+    #     false = keep the contents
+    #   Default: true
+    excluded: true
+
+    # [TODO] overlap ([>] and [<] and +<):
+    # -----------
+    # In the course of a conversation, speakers often talk at the same time.
+    # Transcribing these interactions can be trying. This and the following two symbols
+    # are designed to help sort out this difficult transcription task.
+    # The overlap follows [>] symbol indicates that speakers are talking at the same time.
+    # This code must be used in combination with the overlap precedes symbol [<]
+    #   Values (bool):
+    #     true = [TODO: add special tokens]
+    #     false = keep original form
+    #   Default: false
+    overlap: false
+
+# Dependent Tiers (%)
+# -----------
+# Dependent tiers are lines typed below the main line that contain
+# codes, comments, events, and descriptions of interest to the researcher.
+# All dependent tiers should begin with the percent symbol (%) and should be in lower­case letters.
+# See Sec. 11 in https://talkbank.org/manuals/CHAT.html#_Toc176356556
+dependent:
+
+  # keep_data: Controls dependent tier retention in output file
+  # -----------
+  #   Values (bool):
+  #     true = keep dependent tiers
+  #     false = remove dependent tiers
+  #   Default: true
+  keep_data: true
+
+  # action:
+  # -----------
+  # Controls dependent tier retention in output file
+  #   Refer To: Sec. 11.1
+  action:
+
+    # keep_data ([+ trn]):
+    # -----------
+    # Controls action tier retention in output file
+    #   Values (bool):
+    #     true = keep action dependent tiers
+    #     false = remove action dependent tiers
+    #   Default: true
+    keep_data: true
