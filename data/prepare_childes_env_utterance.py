@@ -230,7 +230,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
         if env_tag != 'null':
             replacements.append((
                 start, end,
-                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
             ))
         else:
             replacements.append((
@@ -256,7 +256,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
         if env_tag != 'null':
             replacements.append((
                 start, end,
-                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
             ))
         else:
             replacements.append((
@@ -289,7 +289,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('singing', True):
         utterance = re.sub(
             r'([^<>\s]+)@si\b',
-            f'<{env_tag}>sings<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sings <sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -299,7 +299,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('sign', True):
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
-            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sign language <sep>' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -309,7 +309,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('sas', True):
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
-            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sign language <sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -699,11 +699,11 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
             # Complex Local Events (9.10.3) and Paralinguistic Material (10.2)
             elif identifier == '^' or identifier == '=!':
-                tag = scope_cfg.get('paralinguistic', 'evt')
+                tag = scope_cfg.get('paralinguistic', 'ENV')
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                        f'<{tag}> {event} <sep> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -727,7 +727,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                        f'<{tag}> {event} <sep> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -1101,6 +1101,7 @@ if __name__ == '__main__':
 
     # Example usage
     input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
+    # input_file = 'raw/childes/Eng-NA/NewmanRatner/18/6691MW.cha'
     output_file = 'prep/childes/event_utterance.cha'
     config_path = 'configs/event_utterance.yaml'
     process_cha_file(input_file, output_file, config_path)

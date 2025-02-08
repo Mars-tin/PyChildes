@@ -230,7 +230,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
         if env_tag != 'null':
             replacements.append((
                 start, end,
-                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
             ))
         else:
             replacements.append((
@@ -256,7 +256,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
         if env_tag != 'null':
             replacements.append((
                 start, end,
-                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
             ))
         else:
             replacements.append((
@@ -289,7 +289,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('singing', True):
         utterance = re.sub(
             r'([^<>\s]+)@si\b',
-            f'<{env_tag}>sings<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sings <sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -299,7 +299,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('sign', True):
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
-            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sign language<sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -309,7 +309,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('sas', True):
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
-            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sign language <sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -703,7 +703,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                        f'<{tag}> {event} <sep> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -727,7 +727,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                        f'<{tag}> {event} <sep> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((

@@ -2,11 +2,13 @@
 
 This module provides functionality to process CHAT format files, specifically
 filtering lines that begin with asterisk (*) which typically denote speaker turns.
+
+The default processing pipeline.
 """
 
 import os
 import re
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import yaml
 from utils import DataIntegrityError
@@ -52,6 +54,82 @@ class ChatConfig:
 
         except yaml.YAMLError as e:
             raise yaml.YAMLError(f'Error parsing YAML configuration: {str(e)}')
+
+
+class UnitTurn:
+    """Represent a unit of utterance with its surrounding environmental context.
+
+    This class encapsulates an utterance and its related environmental information
+    before, during, and after the utterance. It provides functionality to convert
+    the stored data into a consolidated list format.
+
+    Attributes:
+        head: A list representing the headers.
+        utt: A list representing the core utterance content.
+        sit: A list representing the environmental situation content.
+        env_bef: A list containing environmental events before the utterance.
+        env_dur: A list containing environmental events during the utterance.
+        env_aft: A list containing environmental events after the utterance.
+    """
+
+    def __init__(self) -> None:
+        """Initialize UnitUtterance with empty lists for utterance and environmental context.
+
+        The utterance and each environmental context (before, during, after)
+        are initialized as empty lists, ready to be populated with relevant data.
+        """
+        self.speaker = ''
+        self.head = []
+        self.utt = []
+        self.sit = []
+        self.env_bef = []
+        self.env_dur = []
+        self.env_aft = []
+
+    def update(self, content: str, attribute: str) -> None:
+        """Append content to the specified class attribute if it exists.
+
+        Args:
+            content: The content to be appended.
+            attribute: The name of the attribute to which the content will be appended.
+
+        Raises:
+            DataIntegrityError: If the specified attribute does not exist.
+        """
+        if hasattr(self, attribute):
+            attr = getattr(self, attribute)
+            if isinstance(attr, list):
+                attr.append(content)
+            elif isinstance(attr, str):
+                attr = content
+            else:
+                raise DataIntegrityError(
+                    f"Attribute '{attribute}' is not a list.",
+                    attribute
+                )
+        else:
+            raise DataIntegrityError(
+                f"Attribute '{attribute}' does not exist.",
+                attribute
+            )
+
+    def to_list(self) -> list:
+        """Convert the utterance and its environmental context into a single list.
+
+        This method consolidates the environmental context (before, during, after)
+        and the utterance itself into one sequential list.
+
+        Returns:
+            A list containing the combined data from env_bef, env_dur, utt, and env_aft.
+        """
+        output = []
+        output.extend(self.head)
+        output.extend(self.sit)
+        output.extend(self.env_bef)
+        output.extend(self.env_dur)
+        output.extend(self.utt)
+        output.extend(self.env_aft)
+        return output
 
 
 def process_basic(utterance: str, config: ChatConfig) -> str:
@@ -228,7 +306,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
         if env_tag != 'null':
             replacements.append((
                 start, end,
-                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
             ))
         else:
             replacements.append((
@@ -254,7 +332,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
         if env_tag != 'null':
             replacements.append((
                 start, end,
-                f'<{env_tag}>{event}<sep>{nonverbal_token}</{env_tag}>'
+                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
             ))
         else:
             replacements.append((
@@ -287,7 +365,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('singing', True):
         utterance = re.sub(
             r'([^<>\s]+)@si\b',
-            f'<{env_tag}>sings<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sings <sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -297,7 +375,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('sign', True):
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
-            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sign language <sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -307,7 +385,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
     if spec_form_cfg.get('sas', True):
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
-            f'<{env_tag}>sign language<sep>' + r'\1' + f'</{env_tag}>',
+            f'<{env_tag}> sign language <sep> ' + r'\1' + f' </{env_tag}>',
             utterance
         )
     else:
@@ -701,7 +779,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                        f'<{tag}> {event} <sep> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -725,7 +803,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{event}<sep>{text}</{tag}>'
+                        f'<{tag}> {event} <sep> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -917,6 +995,68 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     return True, speaker + ' ' + utterance
 
 
+def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+    """Process a dependent tier from the input.
+
+    Args:
+        input_line: The line to be processed as a dependent tier.
+
+    Returns:
+        A triple containing:
+            - bool: True if the line will be added to the processed file.
+            - str: The tier.
+            - str: The processed line.
+    """
+    try:
+        tier, content = input_line.split(':\t')
+        tier = tier[1:]
+
+    except ValueError:
+        raise DataIntegrityError(
+            f'Invalid dependent tier format: {input_line}',
+            input_line
+        )
+
+    # Get configuration
+    if not config.dependent.get('keep_data', True):
+        return False, tier, ''
+
+    # Process action/situation tiers
+    if tier == 'act' or tier == 'sit':
+
+        env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+
+        if config.dependent['action'].get('keep_data', True) and env_tag != 'null':
+
+            nonverbal_token = config.utterance.get('nonverbal', '<0>')
+
+            content = content.strip()
+            content = f'<{env_tag}> {content} <sep> {nonverbal_token} </{env_tag}>\n'
+
+        else:
+            return False, tier, ''
+
+    else:
+        # TODO: complete parsing dependent tiers
+        return False, tier, ''
+
+    return True, tier, content
+
+
+def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+    """Process a header line from the input.
+
+    Args:
+        input_line: The line to be processed as a header.
+
+    Returns:
+        A tuple containing:
+            - bool: True if the line will be added to the processed file.
+            - str: The processed line.
+    """
+    return config.header.get('keep_data', False), input_line
+
+
 def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
     """Split an interposed utterance into separate speaker-labeled lines.
 
@@ -924,7 +1064,7 @@ def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
         input_line (str): The input line containing interposed speech.
 
     Returns:
-        str: The reformatted utterance with separate speaker designations.
+        List[str]: The reformatted utterance with separate speaker designations.
     """
     speaker_id, utterance = input_line.split(':\t', 1)
 
@@ -954,63 +1094,18 @@ def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
     return input_line_split
 
 
-def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
-    """Process a dependent tier from the input.
+def split_sync_rel(input_line: str, config: ChatConfig) -> Dict[str, str]:
+    """Split an action tier with different synchronization relations.
 
     Args:
-        input_line: The line to be processed as a dependent tier.
+        input_line (str): The input line containing synchronization relations.
+        config (ChatConfig): Configuration settings for processing.
 
     Returns:
-        A tuple containing:
-            - bool: True if the line will be added to the processed file.
-            - str: The processed line.
+        Dict[str, str]: A dictionary containing the processed synchronization relations.
     """
-    try:
-        tier, content = input_line.split(':\t')
-        tier = tier[1:]
-
-    except ValueError:
-        raise DataIntegrityError(
-            f'Invalid dependent tier format: {input_line}',
-            input_line
-        )
-
-    # Get configuration
-    if not config.dependent.get('keep_data', True):
-        return False, ''
-
-    # Process action tiers
-    if tier == 'act':
-
-        env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
-
-        if config.dependent['action'].get('keep_data', True) and env_tag != 'null':
-
-            nonverbal_token = config.utterance.get('nonverbal', '<0>')
-            content = f'<{env_tag}>{content.strip()}<sep>{nonverbal_token}</{env_tag}>'
-
-        else:
-            return False, ''
-
-    else:
-        # TODO: complete parsing dependent tiers
-        return False, ''
-
-    return True, content
-
-
-def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
-    """Process a header line from the input.
-
-    Args:
-        input_line: The line to be processed as a header.
-
-    Returns:
-        A tuple containing:
-            - bool: True if the line will be added to the processed file.
-            - str: The processed line.
-    """
-    return config.header.get('keep_data', False), input_line
+    # TODO: Finish this function
+    return {'env_dur': input_line}
 
 
 def process_cha_file(input_file: str, output_file: str, config_path: str) -> None:
@@ -1037,6 +1132,7 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
         config = ChatConfig(config_path)
 
         processed_lines = []
+        unit_turn = UnitTurn()
 
         for line in lines:
 
@@ -1045,34 +1141,53 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
             # Header
             if line.startswith('@'):
                 keep_data, line = process_header(line, config)
-                lines_proc = [line] if keep_data else []
+                if keep_data:
+                    unit_turn.update(line, 'head')
 
             # Utterance
             elif line.startswith('*'):
 
+                # Start a new unit turn
+                processed_lines.extend(unit_turn.to_list())
+                unit_turn = UnitTurn()
+
                 # Default
                 if '&*' not in line:
                     keep_data, line = process_utterance(line, config)
-                    lines_proc = [line] if keep_data else []
+                    if keep_data:
+                        unit_turn.update(line, 'utt')
 
                 # Interposed Words
                 else:
-                    lines_proc = []
                     lines_split = split_interposed(line, config)
                     for line_split in lines_split:
                         keep_data, line = process_utterance(line_split, config)
                         if keep_data:
-                            lines_proc.append(line)
+                            unit_turn.update(line, 'utt')
 
             # Dependent_Tier
+            # TODO: For now only process %act and %sit
             elif line.startswith('%'):
-                keep_data, line = process_dependent_tier(line, config)
-                lines_proc = [line] if keep_data else []
+
+                # Notes: Feels a bit interwined with process_dependent_tier, especially for none act tiers
+
+                # Default: During
+                if '<' not in line:
+                    keep_data, tier, line = process_dependent_tier(line, config)
+                    unit_turn.update(line, 'env_dur')
+
+                # Process the Synchrony Relations (11.2)
+                else:
+                    ordered_events = split_sync_rel(line, config)
+                    for order, event in ordered_events.items():
+                        keep_data, tier, line = process_dependent_tier(event, config)
+                        if keep_data:
+                            unit_turn.update(line, order)
 
             else:
                 raise DataIntegrityError(data=line)
 
-            processed_lines.extend(lines_proc)
+        processed_lines.extend(unit_turn.to_list())
 
         os.makedirs(os.path.dirname(output_file), exist_ok=True)
         with open(output_file, 'w', encoding='utf-8') as f:

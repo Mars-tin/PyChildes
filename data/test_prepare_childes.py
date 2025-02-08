@@ -48,15 +48,15 @@ class TestPrepareChildes(unittest.TestCase):
     def test_process_local_event(self):
         """Test the process_local_event function."""
         config = pc.ChatConfig(_TEST_CONFIG_PATH)
-        self.assertEqual(pc.process_local_event('&=laughs', config), '<EVT>laughs<sep><0></EVT>')
-        self.assertEqual(pc.process_local_event('&=eats:cookie', config), '<EVT>eats cookie<sep><0></EVT>')
+        self.assertEqual(pc.process_local_event('&=laughs', config), '<EVT> laughs <sep> <0> </EVT>')
+        self.assertEqual(pc.process_local_event('&=eats:cookie', config), '<EVT> eats cookie <sep> <0> </EVT>')
         self.assertEqual(pc.process_local_event(
             '&{l=laughs and then continue until the end marked by &}l=laughs', config),
-            '<EVT>laughs and then continue until the end marked by<sep><0></EVT>'
+            '<EVT> laughs and then continue until the end marked by <sep> <0> </EVT>'
         )
         self.assertEqual(pc.process_local_event(
             '&{n=waving:hands and then continue until the end marked by &}n=waving:hands', config),
-            '<EVT>waving hands and then continue until the end marked by<sep><0></EVT>'
+            '<EVT> waving hands and then continue until the end marked by <sep> <0> </EVT>'
         )
 
     def test_process_linker(self):
@@ -180,31 +180,31 @@ class TestPrepareChildes(unittest.TestCase):
         config = pc.ChatConfig(_TEST_CONFIG_PATH)
         self.assertEqual(pc.process_paralinguistic(
             '0 [=! laughs louder] .', config),
-            '<EVT>laughs louder<sep>0</EVT> .'
+            '<EVT> laughs louder <sep> 0 </EVT> .'
         )
         self.assertEqual(pc.process_paralinguistic(
             "that's mine [=! cries] .", config),
-            "that's <EVT>cries<sep>mine</EVT> ."
+            "that's <EVT> cries <sep> mine </EVT> ."
         )
         self.assertEqual(pc.process_paralinguistic(
             "<that's mine> [=! cries] .", config),
-            "<EVT>cries<sep>that's mine</EVT> ."
+            "<EVT> cries <sep> that's mine </EVT> ."
         )
         self.assertEqual(pc.process_paralinguistic(
             'watch out [= laughing] .', config),
-            'watch <exp>laughing<sep>out</exp> .'
+            'watch <exp> laughing <sep> out </exp> .'
         )
         self.assertEqual(pc.process_paralinguistic(
             'word [=! whispers] .', config),
-            '<EVT>whispers<sep>word</EVT> .'
+            '<EVT> whispers <sep> word </EVT> .'
         )
         self.assertEqual(pc.process_paralinguistic(
             '<first phrase> [= explains] and then <second phrase> [=! whispers]', config),
-            '<exp>explains<sep>first phrase</exp> and then <EVT>whispers<sep>second phrase</EVT>'
+            '<exp> explains <sep> first phrase </exp> and then <EVT> whispers <sep> second phrase </EVT>'
         )
         self.assertEqual(pc.process_paralinguistic(
             'one [=! laughs] and two [= comments]', config),
-            '<EVT>laughs<sep>one</EVT> and <exp>comments<sep>two</exp>'
+            '<EVT> laughs <sep> one </EVT> and <exp> comments <sep> two </exp>'
         )
         self.assertEqual(pc.process_paralinguistic(
             'Billy, would you please <take your shoes off> [!]', config),
@@ -232,7 +232,7 @@ class TestPrepareChildes(unittest.TestCase):
         )
         self.assertEqual(pc.process_paralinguistic(
             'I could use <all of them> [# 2.2] [=! whispers] for the party', config),
-            'I could use <EVT>whispers<sep>all of them</EVT>'
+            'I could use <EVT> whispers <sep> all of them </EVT>'
         )
         self.assertEqual(pc.process_paralinguistic(
             "whyncha [: why don't you] just be quiet !", config),
@@ -252,7 +252,7 @@ class TestPrepareChildes(unittest.TestCase):
         )
         self.assertEqual(pc.process_paralinguistic(
             "I really wish you wouldn't [% said with strong raising of eyebrows] do that", config),
-            "I really wish you <exp>said with strong raising of eyebrows<sep>wouldn't</exp> do that"
+            "I really wish you <exp> said with strong raising of eyebrows <sep> wouldn't </exp> do that"
         )
         self.assertEqual(pc.process_paralinguistic(
             '<going away with my mommy> [?] ?', config),
