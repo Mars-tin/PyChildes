@@ -208,19 +208,19 @@ class TestPrepareChildes(unittest.TestCase):
         )
         self.assertEqual(pc.process_paralinguistic(
             'Billy, would you please <take your shoes off> [!]', config),
-            'Billy, would you please <stress>take your shoes off</stress>'
+            'Billy, would you please <stress> take your shoes off </stress>'
         )
         self.assertEqual(pc.process_paralinguistic(
             'Billy, would you please <take your shoes off> [!!]', config),
-            'Billy, would you please <stress>take your shoes off</stress>'
+            'Billy, would you please <stress> take your shoes off </stress>'
         )
         self.assertEqual(pc.process_paralinguistic(
             'where does that [!] go ?', config),
-            'where does <stress>that</stress> go ?'
+            'where does <stress> that </stress> go ?'
         )
         self.assertEqual(pc.process_paralinguistic(
             'where does that [!!] go ?', config),
-            'where does <stress>that</stress> go ?'
+            'where does <stress> that </stress> go ?'
         )
         self.assertEqual(pc.process_paralinguistic(
             'Use word [# 3.1] when needed', config),

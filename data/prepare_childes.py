@@ -101,7 +101,7 @@ class UnitTurn:
             if isinstance(attr, list):
                 attr.append(content)
             elif isinstance(attr, str):
-                attr = content
+                setattr(self, attribute, content)
             else:
                 raise DataIntegrityError(
                     f"Attribute '{attribute}' is not a list.",
@@ -285,7 +285,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
     Returns:
         str: The processed utterance with events replaced by formatted tags or tokens.
     """
-    env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+    env_tag = config.utterance['scoped'].get('paralinguistic', 'ENV')
     nonverbal_token = config.utterance.get('nonverbal', '<0>')
     replacements = []
 
@@ -358,7 +358,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
         Utterance with special form markers replaced according to config settings
     """
     spec_form_cfg = config.utterance['specform']
-    env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+    env_tag = config.utterance['scoped'].get('paralinguistic', 'ENV')
     pho_tag = config.utterance['unidentifiable'].get('phonological', '<pho>')
 
     # singing (@si)
@@ -775,7 +775,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
             # Complex Local Events (9.10.3) and Paralinguistic Material (10.2)
             elif identifier == '^' or identifier == '=!':
-                tag = scope_cfg.get('paralinguistic', 'evt')
+                tag = scope_cfg.get('paralinguistic', 'ENV')
                 if tag != 'null':
                     replacements.append((
                         start, end,
@@ -817,7 +817,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{text}</{tag}>'
+                        f'<{tag}> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -831,7 +831,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{text}</{tag}>'
+                        f'<{tag}> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -928,7 +928,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     return utterance
 
 
-def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str, str]:
     """Process an utterance from the input using provided configuration.
 
     Args:
@@ -938,6 +938,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     Returns:
         A tuple containing:
             - bool: True if the line will be added to the processed file.
+            - str: The speaker token.
             - str: The processed line.
 
     Raises:
@@ -992,7 +993,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
     # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
 
-    return True, speaker + ' ' + utterance
+    return True, speaker, utterance
 
 
 def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
@@ -1022,9 +1023,9 @@ def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, s
         return False, tier, ''
 
     # Process action/situation tiers
-    if tier == 'act' or tier == 'sit':
+    if tier == 'act' or tier == 'sit' or tier == 'gpx':
 
-        env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+        env_tag = config.utterance['scoped'].get('paralinguistic', 'ENV')
 
         if config.dependent['action'].get('keep_data', True) and env_tag != 'null':
 
@@ -1083,18 +1084,18 @@ def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
             input_line_split = [
                 '{speaker_id}:\t{first_part.strip()} +.',
                 f"*{interpose_speaker}:\t{second_part.split(' ', 1)[0]} .",
-                f"{speaker_id}:\t{' '.join(second_part.split(' ')[1:])}"
+                f"{speaker_id}:\t{' '.join(second_part.split(' ')[1:])}\n"
             ]
 
         else:
             input_line_split = [
-                f"{speaker_id}:\t{first_part.strip()} {' '.join(second_part.split(' ')[1:])}",
+                f"{speaker_id}:\t{first_part.strip()} {' '.join(second_part.split(' ')[1:])}\n",
             ]
 
     return input_line_split
 
 
-def split_sync_rel(input_line: str, config: ChatConfig) -> Dict[str, str]:
+def split_sync_rel(input_line: str, config: ChatConfig) -> Dict[str, list]:
     """Split an action tier with different synchronization relations.
 
     Args:
@@ -1102,10 +1103,35 @@ def split_sync_rel(input_line: str, config: ChatConfig) -> Dict[str, str]:
         config (ChatConfig): Configuration settings for processing.
 
     Returns:
-        Dict[str, str]: A dictionary containing the processed synchronization relations.
+        Dict[str, list]: A dictionary containing the processed synchronization relations.
     """
-    # TODO: Finish this function
-    return {'env_dur': input_line}
+    try:
+        tier, content = input_line.split(':\t')
+
+    except ValueError:
+        raise DataIntegrityError(
+            f'Invalid dependent tier format: {input_line}',
+            input_line
+        )
+
+    env_dict = {'env_dur': []}
+    content = '<dur> ' + content if content[0] != '<' else content
+
+    pattern = r'(<[^>]+>)\s+([^<]+)'
+    matches = re.findall(pattern, content)
+
+    for tag, action in matches:
+        action = action.strip()
+        if tag == '<aft>':
+            env_dict['env_aft'] = [action.strip()]
+        elif tag == '<bef>':
+            env_dict['env_bef'] = [action.strip()]
+        elif tag == '<dur>':
+            env_dict['env_dur'].append(action.strip())
+        else:
+            env_dict['env_dur'].append(action.strip())
+
+    return env_dict
 
 
 def process_cha_file(input_file: str, output_file: str, config_path: str) -> None:
@@ -1153,36 +1179,40 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
 
                 # Default
                 if '&*' not in line:
-                    keep_data, line = process_utterance(line, config)
+                    keep_data, speaker, line = process_utterance(line, config)
                     if keep_data:
-                        unit_turn.update(line, 'utt')
+                        unit_turn.update(speaker, 'speaker')
+                        unit_turn.update(speaker + ' ' + line, 'utt')
 
                 # Interposed Words
                 else:
                     lines_split = split_interposed(line, config)
                     for line_split in lines_split:
-                        keep_data, line = process_utterance(line_split, config)
+                        keep_data, speaker, line = process_utterance(line_split, config)
                         if keep_data:
-                            unit_turn.update(line, 'utt')
+                            unit_turn.update(speaker, 'speaker')
+                            unit_turn.update(speaker + ' ' + line, 'utt')
 
             # Dependent_Tier
             # TODO: For now only process %act and %sit
             elif line.startswith('%'):
 
                 # Notes: Feels a bit interwined with process_dependent_tier, especially for none act tiers
-
                 # Default: During
                 if '<' not in line:
                     keep_data, tier, line = process_dependent_tier(line, config)
-                    unit_turn.update(line, 'env_dur')
+                    if keep_data:
+                        unit_turn.update(line, 'env_dur')
 
                 # Process the Synchrony Relations (11.2)
                 else:
                     ordered_events = split_sync_rel(line, config)
-                    for order, event in ordered_events.items():
-                        keep_data, tier, line = process_dependent_tier(event, config)
-                        if keep_data:
-                            unit_turn.update(line, order)
+                    for order, events in ordered_events.items():
+                        for event in events:
+                            event = '%act:\t' + event
+                            keep_data, tier, line = process_dependent_tier(event, config)
+                            if keep_data:
+                                unit_turn.update(line, order)
 
             else:
                 raise DataIntegrityError(data=line)

@@ -209,7 +209,7 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
     Returns:
         str: The processed utterance with events replaced by formatted tags or tokens.
     """
-    env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+    env_tag = config.utterance['scoped'].get('paralinguistic', 'ENV')
     nonverbal_token = config.utterance.get('nonverbal', '<0>')
     replacements = []
 
@@ -282,7 +282,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
         Utterance with special form markers replaced according to config settings
     """
     spec_form_cfg = config.utterance['specform']
-    env_tag = config.utterance['scoped'].get('paralinguistic', 'evt')
+    env_tag = config.utterance['scoped'].get('paralinguistic', 'ENV')
     pho_tag = config.utterance['unidentifiable'].get('phonological', '<pho>')
 
     # singing (@si)
@@ -699,7 +699,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
             # Complex Local Events (9.10.3) and Paralinguistic Material (10.2)
             elif identifier == '^' or identifier == '=!':
-                tag = scope_cfg.get('paralinguistic', 'evt')
+                tag = scope_cfg.get('paralinguistic', 'ENV')
                 if tag != 'null':
                     replacements.append((
                         start, end,
@@ -741,7 +741,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{text}</{tag}>'
+                        f'<{tag}> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -755,7 +755,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                 if tag != 'null':
                     replacements.append((
                         start, end,
-                        f'<{tag}>{text}</{tag}>'
+                        f'<{tag}> {text} </{tag}>'
                     ))
                 else:
                     replacements.append((
@@ -949,12 +949,12 @@ def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
             input_line_split = [
                 '{speaker_id}:\t{first_part.strip()} +.',
                 f"*{interpose_speaker}:\t{second_part.split(' ', 1)[0]} .",
-                f"{speaker_id}:\t{' '.join(second_part.split(' ')[1:])}"
+                f"{speaker_id}:\t{' '.join(second_part.split(' ')[1:])}\n"
             ]
 
         else:
             input_line_split = [
-                f"{speaker_id}:\t{first_part.strip()} {' '.join(second_part.split(' ')[1:])}",
+                f"{speaker_id}:\t{first_part.strip()} {' '.join(second_part.split(' ')[1:])}\n",
             ]
 
     return input_line_split
