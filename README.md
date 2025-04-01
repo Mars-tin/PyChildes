@@ -34,7 +34,7 @@ If you find this tool useful, please give us credit by citing:
 @misc{trabank,
     title={Trabank: A Toolkit for Computational Developmental Studies in Language Models},
     author={Ma, Ziqiao and Shi, Freda and Chai, Joyce},
-    howpublished={https://github.com/Mars-tin/TraBank},
+    howpublished={https://github.com/Mars-tin/PyChildes},
     year={2025}
 }
 ```
@@ -88,3 +88,28 @@ mkdir prep/childes
 │               ├── 030321.cha
 │               └── 030608.cha
 ```
+
+## Data Preparation
+
+The script `prepare_childes.py` is designed to preprocess `.cha` files from the **CHILDES** corpus based on a specified configuration file.
+
+### Arguments
+
+- `--input_file` (str): Path to the `.cha` file to be processed.  
+  **Default:** `raw/childes/Eng-NA/Bates/Free20/amy.cha`
+
+- `--output_file` (str): Path where the processed `.cha` file will be saved.  
+  **Default:** `prep/output.cha`
+
+- `--config_path` (str): Path to the configuration file (`.yaml`) defining preprocessing rules and settings.  
+  **Default:** `configs/default.yaml`
+
+### Example
+
+To process a file named `amy.cha` located at `raw/childes/Eng-NA/Bates/Free20/` using a custom configuration file `my_config.yaml`:
+
+```bash
+python prepare_childes.py --input_file raw/childes/Eng-NA/Bates/Free20/amy.cha --output_file prep/my_output.cha --config_path configs/my_config.yaml
+```
+
+The processed file will be saved to `prep/my_output.cha`.
