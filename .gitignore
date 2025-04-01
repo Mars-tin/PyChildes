@@ -7,13 +7,10 @@
 experiments/*
 
 # Corpus data files
-data/**/*.zip
-data/**/*.train
-data/**/*.cha
-data/raw/
-data/prep
+raw/
+prep/
 
-# Development software files 
+# Development software files
 .vscode/
 
 # User-specific files

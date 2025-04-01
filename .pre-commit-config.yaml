@@ -30,6 +30,6 @@ repos:
   hooks:
   - id: unittest
     name: unittest
-    entry: bash -c 'coverage run -m unittest discover data'
+    entry: bash -c 'coverage run -m unittest discover .'
     language: system
     types: [python]

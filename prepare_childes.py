@@ -3,14 +3,17 @@
 This module provides functionality to process CHAT format files, specifically
 filtering lines that begin with asterisk (*) which typically denote speaker turns.
 
-This processing pipeline only keeps the utterances and environment context.
+The default processing pipeline.
 """
 
+import argparse
 import os
 import re
+from functools import wraps
 from typing import Dict, List, Optional, Tuple
 
 import yaml
+
 from utils import DataIntegrityError
 
 
@@ -928,7 +931,7 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     return utterance
 
 
-def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str, str]:
     """Process an utterance from the input using provided configuration.
 
     Args:
@@ -938,6 +941,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     Returns:
         A tuple containing:
             - bool: True if the line will be added to the processed file.
+            - str: The speaker token.
             - str: The processed line.
 
     Raises:
@@ -992,12 +996,69 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
     # utterance = re.sub(r'\[.*?\]\s*', '', utterance)
     # utterance = re.sub(r'\<(.+?)\>', r'\1', utterance)
 
-    language_token = '<LAN>'
-    words = re.findall(r"<\w+>|\b\w+'\w+|\b\w+", utterance)
-    annotated_words = [f'{word}:{language_token}' for word in words]
-    utterance = ' '.join(annotated_words) + ' '
-
     return True, speaker, utterance
+
+
+def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+    """Process a dependent tier from the input.
+
+    Args:
+        input_line: The line to be processed as a dependent tier.
+
+    Returns:
+        A triple containing:
+            - bool: True if the line will be added to the processed file.
+            - str: The tier.
+            - str: The processed line.
+    """
+    try:
+        tier, content = input_line.split(':\t')
+        tier = tier[1:]
+
+    except ValueError:
+        raise DataIntegrityError(
+            f'Invalid dependent tier format: {input_line}',
+            input_line
+        )
+
+    # Get configuration
+    if not config.dependent.get('keep_data', True):
+        return False, tier, ''
+
+    # Process action/situation tiers
+    if tier == 'act' or tier == 'sit' or tier == 'gpx':
+
+        env_tag = config.utterance['scoped'].get('paralinguistic', 'ENV')
+
+        if config.dependent['action'].get('keep_data', True) and env_tag != 'null':
+
+            nonverbal_token = config.utterance.get('nonverbal', '<0>')
+
+            content = content.strip()
+            content = f'<{env_tag}> {content} <sep> {nonverbal_token} </{env_tag}>\n'
+
+        else:
+            return False, tier, ''
+
+    else:
+        # TODO: complete parsing dependent tiers
+        return False, tier, ''
+
+    return True, tier, content
+
+
+def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+    """Process a header line from the input.
+
+    Args:
+        input_line: The line to be processed as a header.
+
+    Returns:
+        A tuple containing:
+            - bool: True if the line will be added to the processed file.
+            - str: The processed line.
+    """
+    return config.header.get('keep_data', False), input_line
 
 
 def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
@@ -1007,7 +1068,7 @@ def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
         input_line (str): The input line containing interposed speech.
 
     Returns:
-        str: The reformatted utterance with separate speaker designations.
+        List[str]: The reformatted utterance with separate speaker designations.
     """
     speaker_id, utterance = input_line.split(':\t', 1)
 
@@ -1074,65 +1135,6 @@ def split_sync_rel(input_line: str, config: ChatConfig) -> Dict[str, list]:
             env_dict['env_dur'].append(action.strip())
 
     return env_dict
-
-
-def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
-    """Process a dependent tier from the input.
-
-    Args:
-        input_line: The line to be processed as a dependent tier.
-
-    Returns:
-        A tuple containing:
-            - bool: True if the line will be added to the processed file.
-            - str: The processed line.
-    """
-    try:
-        tier, content = input_line.split(':\t')
-        tier = tier[1:]
-
-    except ValueError:
-        raise DataIntegrityError(
-            f'Invalid dependent tier format: {input_line}',
-            input_line
-        )
-
-    # Get configuration
-    if not config.dependent.get('keep_data', True):
-        return False, tier, ''
-
-    # Process action tiers
-    if tier == 'act' or tier == 'sit' or tier == 'gpx':
-
-        if config.dependent['action'].get('keep_data', True):
-
-            env_tag = '<ENV>'
-            words = re.findall(r"<\w+>|\b\w+'\w+|\b\w+", content.strip())
-            annotated_words = [f'{word}:{env_tag}' for word in words]
-            content = ' '.join(annotated_words) + ' '
-
-        else:
-            return False, tier, ''
-
-    else:
-        # TODO: complete parsing dependent tiers
-        return False, tier, ''
-
-    return True, tier, content
-
-
-def process_header(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
-    """Process a header line from the input.
-
-    Args:
-        input_line: The line to be processed as a header.
-
-    Returns:
-        A tuple containing:
-            - bool: True if the line will be added to the processed file.
-            - str: The processed line.
-    """
-    return config.header.get('keep_data', False), input_line
 
 
 def process_cha_file(input_file: str, output_file: str, config_path: str) -> None:
@@ -1202,7 +1204,6 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
                 # Default: During
                 if '<' not in line:
                     keep_data, tier, line = process_dependent_tier(line, config)
-                    line = unit_turn.speaker + ' ' + line
                     if keep_data:
                         unit_turn.update(line, 'env_dur')
 
@@ -1237,10 +1238,46 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
         raise e
 
 
-if __name__ == '__main__':
+def validate_paths(func):
+    """Decorator to validate input, output, and config file paths."""
+    @wraps(func)
+    def wrapper(input_file: str, output_file: str, config_path: str, *args, **kwargs):
+        if not input_file.endswith('.cha'):
+            raise ValueError('Input file must be a .cha file.')
+        if not output_file.endswith('.cha'):
+            raise ValueError('Output file must be a .cha file.')
+        if not config_path.endswith('.yaml'):
+            raise ValueError('Config file must be a .yaml file.')
+        return func(input_file, output_file, config_path, *args, **kwargs)
+    return wrapper
 
-    # Example usage
-    input_file = 'raw/childes/Eng-NA/Bates/Free20/amy.cha'
-    output_file = 'prep/childes/event_utterance.cha'
-    config_path = 'configs/event_utterance.yaml'
+
+@validate_paths
+def main(input_file: str = 'raw/childes/Eng-NA/Bates/Free20/amy.cha',
+         output_file: str = 'prep/childes/example.cha',
+         config_path: str = 'configs/example.yaml') -> None:
+    """Process a .cha file based on the specified configuration.
+
+    Args:
+        input_file: Path to the input .cha file to be processed.
+        output_file: Path where the processed content will be written.
+        config_path: Path to the configuration .yaml file to be followed.
+
+    Raises:
+        ValueError: If the provided file paths do not match the expected file types.
+    """
     process_cha_file(input_file, output_file, config_path)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Process a .cha file with a given configuration.')
+    parser.add_argument('--input_file', type=str, default='raw/childes/Eng-NA/Bates/Free20/amy.cha',
+                        help='Path to the input .cha file (default: raw/childes/Eng-NA/Bates/Free20/amy.cha)')
+    parser.add_argument('--output_file', type=str, default='prep/output.cha',
+                        help='Path to the output .cha file (default: prep/output.cha)')
+    parser.add_argument('--config_path', type=str, default='configs/default.yaml',
+                        help='Path to the configuration file (default: configs/default.yaml)')
+
+    args = parser.parse_args()
+
+    main(input_file=args.input_file, output_file=args.output_file, config_path=args.config_path)

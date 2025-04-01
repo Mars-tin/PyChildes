@@ -4,7 +4,7 @@ import unittest
 
 import prepare_childes as pc
 
-_TEST_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'configs/example.yaml')
+_TEST_CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'configs/default.yaml')
 
 
 class TestPrepareChildes(unittest.TestCase):
