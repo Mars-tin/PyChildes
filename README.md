@@ -28,12 +28,13 @@ When citing the use of [TalkBank](https://talkbank.org/) and [CHILDES](https://c
 
 ### Credit
 
+This tool is a part of the broader Trabank toolkit that we are actively developing.
 If you find this tool useful, please give us credit by citing:
 
 ```bibtex
 @misc{trabank,
     title={Trabank: A Toolkit for Computational Developmental Studies in Language Models},
-    author={Ma, Ziqiao and Shi, Freda and Chai, Joyce},
+    author={Ma, Ziqiao and Chai, Joyce and Shi, Freda},
     howpublished={https://github.com/Mars-tin/PyChildes},
     year={2025}
 }
@@ -89,9 +90,42 @@ mkdir prep/childes
 │               └── 030608.cha
 ```
 
-## Data Preparation
+## Data Preparation (For Users)
 
 The script `prepare_childes.py` is designed to preprocess `.cha` files from the **CHILDES** corpus based on a specified configuration file.
+
+### Configurations
+
+Path to the configuration file (`.yaml`) defining preprocessing rules and settings are under `configs/`.
+
+#### Header (@)
+- **Purpose**: Manage metadata lines starting with `@`, containing session and participant information.
+- **Options**: 
+  - `keep_data` (bool): whether to retain header lines (`default: false`).
+
+#### Utterance (*)
+- **Purpose**: Control the processing of speaker utterances (main lines starting with `*`).
+- **Subcomponents**:
+  - `keep_data` and `keep_speaker`: retain or remove utterances and speaker tags.
+  - `interposed`, `nonverbal`: handle interposed comments and silent actions.
+  - **basic**: handle markers like satellite (`‡`), tone (`↑`/`↓`), pauses, etc.
+  - **linkers**: manage special termination markers like trail-offs (` +...`), interruptions (` +/`), latching (`++`), and more.
+  - **incomplete**: handle incomplete or omitted words.
+  - **specform**: process special word forms (`@b`, `@c`, `@d`, etc.) like babbling, dialect, neologisms.
+  - **unidentifiable**: tag unintelligible, phonological, and untranscribed material (`xxx`, `yyy`, `www`).
+  - **disfluency**: manage speech disfluencies like fragments (`&+`), fillers (`&-`), nonwords (`&~`).
+  - **scoped**: process scoped annotations like paralinguistic events (`[^]`), replacements (`[:]`), stressing (`[!]`), retracing (`[//]`), etc.
+
+#### Dependent Tiers (%)
+- **Purpose**: Manage supplemental information lines starting with `%`.
+- **Options**:
+  - `keep_data` (bool): retain dependent tiers.
+  - `action`: control action-dependent tiers like `%act`.
+
+#### Notes
+- Default behaviors are specified for each option.
+- Extensive references to the [CHAT manual](https://talkbank.org/manuals/CHAT.html) are included for detailed definitions.
+- This config enables flexible, fine-grained control over CHAT transcription processing.
 
 ### Arguments
 
