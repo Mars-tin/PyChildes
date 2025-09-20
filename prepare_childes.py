@@ -7,9 +7,12 @@ The default processing pipeline.
 """
 
 import argparse
-import os
-import re
+from contextlib import AbstractContextManager
 from functools import wraps
+import io
+import os
+from pathlib import Path
+import re
 from typing import Dict, List, Optional, Tuple
 
 import yaml
@@ -999,7 +1002,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str, s
     return True, speaker, utterance
 
 
-def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str, str]:
     """Process a dependent tier from the input.
 
     Args:
@@ -1039,7 +1042,8 @@ def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, s
 
         else:
             return False, tier, ''
-
+    # elif tier == 'gra':
+    #     content = content.strip()
     else:
         # TODO: complete parsing dependent tiers
         return False, tier, ''
@@ -1136,6 +1140,43 @@ def split_sync_rel(input_line: str, config: ChatConfig) -> Dict[str, list]:
 
     return env_dict
 
+class ChildesSink(AbstractContextManager):
+    def write_turn(self, turn: UnitTurn) -> None:
+        ...
+
+class ChildesSinkText(ChildesSink):
+    """Text file implementation of ChildesSink that writes turns to a text file."""
+    
+    file_path: str
+    buffer: list[str]
+
+    def __init__(self, output_file: str):
+        """Initialize with the output file path.
+        
+        Args:
+            output_file: Path where the processed content will be written.
+        """
+        self.file_path = output_file
+        self.buffer = []
+
+    def __enter__(self):
+        """Open the file for writing and return self."""
+
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+        return self
+    
+    def write_turn(self, turn: UnitTurn) -> None:
+        """Write a UnitTurn to the file."""
+        self.buffer.extend(turn.to_list())
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        try:
+            with open(self.file_path, "w", encoding="utf-8") as f:
+                f.writelines(self.buffer)
+        except Exception:
+            raise
+        else:
+            self.buffer.clear()
 
 def process_cha_file(input_file: str, output_file: str, config_path: str) -> None:
     """Read a .cha file and write cleaned conversations to output file.
@@ -1160,71 +1201,70 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
     try:
         config = ChatConfig(config_path)
 
-        processed_lines = []
+        # processed_lines = []
+
+        sink: ChildesSink = ChildesSinkText(output_file)
+
         unit_turn = UnitTurn()
 
-        for line in lines:
+        with sink:
+            for line in lines:
+                keep_data = True
 
-            keep_data = True
-
-            # Header
-            if line.startswith('@'):
-                keep_data, line = process_header(line, config)
-                if keep_data:
-                    unit_turn.update(line, 'head')
-
-            # Utterance
-            elif line.startswith('*'):
-
-                # Start a new unit turn
-                processed_lines.extend(unit_turn.to_list())
-                unit_turn = UnitTurn()
-
-                # Default
-                if '&*' not in line:
-                    keep_data, speaker, line = process_utterance(line, config)
+                # Header
+                if line.startswith('@'):
+                    keep_data, line = process_header(line, config)
                     if keep_data:
-                        unit_turn.update(speaker, 'speaker')
-                        unit_turn.update(speaker + ' ' + line, 'utt')
+                        unit_turn.update(line, 'head')
 
-                # Interposed Words
-                else:
-                    lines_split = split_interposed(line, config)
-                    for line_split in lines_split:
-                        keep_data, speaker, line = process_utterance(line_split, config)
+                # Utterance
+                elif line.startswith('*'):
+
+                    # Start a new unit turn
+                    sink.write_turn(unit_turn)
+                    unit_turn = UnitTurn()
+
+                    # Default
+                    if '&*' not in line:
+                        keep_data, speaker, line = process_utterance(line, config)
                         if keep_data:
                             unit_turn.update(speaker, 'speaker')
                             unit_turn.update(speaker + ' ' + line, 'utt')
 
-            # Dependent_Tier
-            # TODO: For now only process %act and %sit
-            elif line.startswith('%'):
-
-                # Notes: Feels a bit interwined with process_dependent_tier, especially for none act tiers
-                # Default: During
-                if '<' not in line:
-                    keep_data, tier, line = process_dependent_tier(line, config)
-                    if keep_data:
-                        unit_turn.update(line, 'env_dur')
-
-                # Process the Synchrony Relations (11.2)
-                else:
-                    ordered_events = split_sync_rel(line, config)
-                    for order, events in ordered_events.items():
-                        for event in events:
-                            event = '%act:\t' + event
-                            keep_data, tier, line = process_dependent_tier(event, config)
+                    # Interposed Words
+                    else:
+                        lines_split = split_interposed(line, config)
+                        for line_split in lines_split:
+                            keep_data, speaker, line = process_utterance(line_split, config)
                             if keep_data:
-                                unit_turn.update(line, order)
+                                unit_turn.update(speaker, 'speaker')
+                                unit_turn.update(speaker + ' ' + line, 'utt')
 
-            else:
-                raise DataIntegrityError(data=line)
+                # Dependent_Tier
+                # TODO: For now only process %act and %sit
+                elif line.startswith('%'):
 
-        processed_lines.extend(unit_turn.to_list())
+                    # Notes: Feels a bit interwined with process_dependent_tier, especially for none act tiers
+                    # Default: During
+                    if '<' not in line:
+                        keep_data, tier, line = process_dependent_tier(line, config)
+                        if keep_data:
+                            unit_turn.update(line, 'env_dur')
 
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.writelines(processed_lines)
+                    # Process the Synchrony Relations (11.2)
+                    else:
+                        ordered_events = split_sync_rel(line, config)
+                        for order, events in ordered_events.items():
+                            for event in events:
+                                event = '%act:\t' + event
+                                keep_data, tier, line = process_dependent_tier(event, config)
+                                if keep_data:
+                                    unit_turn.update(line, order)
+
+                else:
+                    raise DataIntegrityError(data=line)
+
+            sink.write_turn(unit_turn)
 
         print(f'Successfully processed {input_file}')
         print(f'processed content written to {output_file}')
@@ -1242,12 +1282,23 @@ def validate_paths(func):
     """Decorator to validate input, output, and config file paths."""
     @wraps(func)
     def wrapper(input_file: str, output_file: str, config_path: str, *args, **kwargs):
-        if not input_file.endswith('.cha'):
+        input_file_path = Path(input_file)
+        if not input_file_path.exists():
+            raise FileNotFoundError(f'Input file does not exist: {input_file}')
+
+        if not input_file_path.suffix == '.cha':
             raise ValueError('Input file must be a .cha file.')
-        if not output_file.endswith('.cha'):
+        
+        output_file_path = Path(output_file)
+        if output_file_path.suffix != '.cha':
             raise ValueError('Output file must be a .cha file.')
-        if not config_path.endswith('.yaml'):
-            raise ValueError('Config file must be a .yaml file.')
+
+        config_path_path = Path(config_path)
+        if not config_path_path.exists():
+            raise FileNotFoundError(f'Config file does not exist: {config_path}')
+
+        if config_path_path.suffix != '.yaml' and config_path_path.suffix != '.yml':
+            raise ValueError('Config file must be a YAML file.')
         return func(input_file, output_file, config_path, *args, **kwargs)
     return wrapper
 
