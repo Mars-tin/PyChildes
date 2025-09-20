@@ -958,7 +958,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str, s
 
     # Get configuration
     if not config.utterance.get('keep_data', True):
-        return False, ''
+        return False, '', ''
 
     # Process the speaker token
     speaker = ''
