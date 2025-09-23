@@ -4,6 +4,7 @@ Output structures (context managers) for processed CHAT data.
 
 from contextlib import AbstractContextManager
 import os
+from typing import Any
 from chat_config import ChatConfig
 from unit_turn import UnitTurn
 
@@ -74,6 +75,70 @@ class ChatSinkText(ChatSink):
         try:
             with open(self.file_path, "w", encoding="utf-8") as f:
                 f.writelines(self.buffer)
+        except Exception:
+            raise
+        else:
+            self.buffer.clear()
+
+class ChatSinkJSON(ChatSink):
+    """
+    Output JSON or Multiline JSON files, by default in Multiline JSONL format.
+    Each line is a JSON object with "kind" and "content" fields.
+    The schema for each kind is as follows:
+    ```
+    header: string[]
+    utterance: string[]
+    ```
+
+    If JSON is chosen, the entire output is wrapped in a single JSON object with a "data" field containing an array of these objects.
+    """
+
+    file_path: str
+    is_multiline: bool
+    buffer: list[dict[str, Any]]
+
+    def __init__(self, config: ChatConfig, *, output_file: str, is_multiline: bool = True):
+        self.file_path = output_file
+        self.buffer = []
+        self.is_multiline = is_multiline
+
+    def __enter__(self):
+        os.makedirs(os.path.dirname(self.file_path), exist_ok=True)
+        return self
+
+    def write_turn(self, turn: UnitTurn) -> None:
+        if turn.head:
+            kind = "header"
+            content = {
+                "content": list(map(str.strip, turn.head)),
+            }
+        elif turn.utt:
+            kind = "utterance"
+            content = {
+                "content": list(map(str.strip, turn.to_list())),
+            }
+        else:
+            # Skip unknown/empty turns
+            return
+
+        self.buffer.append({
+            "kind": kind,
+            **content,
+        })
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        import json
+
+        try:
+            with open(self.file_path, "w", encoding="utf-8") as f:
+                if self.is_multiline:
+                    for entry in self.buffer:
+                        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+                else:
+                    data = {
+                        "data": self.buffer
+                    }
+                    f.write(json.dumps(data, ensure_ascii=False))
         except Exception:
             raise
         else:

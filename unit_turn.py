@@ -12,12 +12,48 @@ class UnitTurn:
     the stored data into a consolidated list format.
 
     Attributes:
+        speaker: Identifier of the speaker associated with this unit.
         head: A list representing the headers.
         utt: A list representing the core utterance content.
         sit: A list representing the environmental situation content.
         env_bef: A list containing environmental events before the utterance.
         env_dur: A list containing environmental events during the utterance.
         env_aft: A list containing environmental events after the utterance.
+    """
+
+    speaker: str
+    """\
+    Identifier of the speaker associated with this unit.\
+    """
+
+    head: list[str]
+    """\
+    List representing the headers.\
+    """
+
+    utt: list[str]
+    """\
+    List representing the core utterance content.\
+    """
+
+    sit: list[str]
+    """\
+    List representing the situational/environmental content.\
+    """
+
+    env_bef: list[str]
+    """\
+    Environmental events occurring before the utterance.\
+    """
+
+    env_dur: list[str]
+    """\
+    Environmental events occurring during the utterance.\
+    """
+
+    env_aft: list[str]
+    """\
+    Environmental events occurring after the utterance.\
     """
 
     def __init__(self) -> None:

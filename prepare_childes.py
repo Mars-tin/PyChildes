@@ -7,14 +7,15 @@ The default processing pipeline.
 """
 
 import argparse
-from functools import wraps
+from functools import wraps, partial
+from operator import is_
 from pathlib import Path
 import re
 from typing import Dict, List, Tuple
 
 
 from chat_config import ChatConfig as ChatConfig
-from chat_output import ChatSink, ChatSinkText
+from chat_output import ChatSink, ChatSinkText, ChatSinkJSON
 from unit_turn import UnitTurn
 from utils import DataIntegrityError
 
@@ -1044,9 +1045,16 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
     try:
         config = ChatConfig(config_path)
 
-        # processed_lines = []
-
-        sink: ChatSink = ChatSinkText(config, output_file=output_file)
+        ext = Path(output_file).suffix
+        if ext == '.cha' or ext == '.txt':
+            sink: ChatSink = ChatSinkText(config, output_file=output_file)
+        elif ext == '.jsonl':
+            sink: ChatSink = ChatSinkJSON(config, output_file=output_file)
+        elif ext == '.json':
+            sink: ChatSink = ChatSinkJSON(config, output_file=output_file, is_multiline=False)
+        else:
+            sink: ChatSink = ChatSinkText(config, output_file=output_file)
+            print(f'Warning: Unrecognized output file extension "{ext}", defaulting to plain text format.')
 
         unit_turn = UnitTurn()
 
@@ -1131,10 +1139,6 @@ def validate_paths(func):
 
         if not input_file_path.suffix == '.cha':
             raise ValueError('Input file must be a .cha file.')
-        
-        output_file_path = Path(output_file)
-        if output_file_path.suffix != '.cha':
-            raise ValueError('Output file must be a .cha file.')
 
         config_path_path = Path(config_path)
         if not config_path_path.exists():
