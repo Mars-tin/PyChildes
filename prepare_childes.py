@@ -10,11 +10,11 @@ import argparse
 from functools import wraps
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 
 from chat_config import ChatConfig as ChatConfig
-from output import ChildesSink, ChildesSinkText
+from chat_output import ChatSink, ChatSinkText
 from unit_turn import UnitTurn
 from utils import DataIntegrityError
 
@@ -1046,7 +1046,7 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
 
         # processed_lines = []
 
-        sink: ChildesSink = ChildesSinkText({"utterance"}, output_file=output_file)
+        sink: ChatSink = ChatSinkText(config, output_file=output_file)
 
         unit_turn = UnitTurn()
 
