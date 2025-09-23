@@ -1,6 +1,9 @@
+"""Configuration for CHAT data processing. See `ChatConfig` class."""
+
 from typing import Optional
 
 import yaml
+
 
 class ChatConfig:
     """Load and provide access to CHAT data processing configuration.

@@ -1,8 +1,7 @@
-"""
-Module for `UnitTurn`, which represents a unit of utterance with its surrounding environmental context.
-"""
+"""Module for `UnitTurn`, which represents a unit of utterance with its surrounding environmental context."""
 
 from utils import DataIntegrityError
+
 
 class UnitTurn:
     """Represent a unit of utterance with its surrounding environmental context.
@@ -88,13 +87,11 @@ class UnitTurn:
                 setattr(self, attribute, content)
             else:
                 raise DataIntegrityError(
-                    f"Attribute '{attribute}' is not a list.",
-                    attribute
+                    f"Attribute '{attribute}' is not a list.", attribute
                 )
         else:
             raise DataIntegrityError(
-                f"Attribute '{attribute}' does not exist.",
-                attribute
+                f"Attribute '{attribute}' does not exist.", attribute
             )
 
     def to_list(self) -> list:
