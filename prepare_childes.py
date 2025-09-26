@@ -7,132 +7,15 @@ The default processing pipeline.
 """
 
 import argparse
-import os
 import re
 from functools import wraps
-from typing import Dict, List, Optional, Tuple
+from pathlib import Path
+from typing import Dict, List, Tuple
 
-import yaml
-
+from chat_config import ChatConfig as ChatConfig
+from chat_output import ChatSink, ChatSinkJSON, ChatSinkText
+from unit_turn import UnitTurn
 from utils import DataIntegrityError
-
-
-class ChatConfig:
-    """Load and provide access to CHAT data processing configuration.
-
-    This class loads configuration from a YAML file specifying how different
-    CHAT data elements should be processed and transformed.
-
-    Attributes:
-        header: Configuration for header section processing.
-        utterance: Configuration for utterance processing including
-            special markers and transformations.
-        dependent_tier: Configuration for dependent tier processing.
-    """
-
-    def __init__(self, config_path: Optional[str] = None) -> None:
-        """Initialize ChatConfig with configuration from YAML file.
-
-        Args:
-            config_path: Path to the YAML configuration file. If None,
-                defaults to 'chat.yaml' in the current directory.
-
-        Raises:
-            FileNotFoundError: If the configuration file is not found.
-            yaml.YAMLError: If the YAML file is malformed.
-        """
-        if config_path is None:
-            config_path = './configs/example.yaml'
-
-        try:
-            with open(config_path, 'r', encoding='utf-8') as f:
-                config = yaml.safe_load(f)
-
-            self.header = config.get('header', {})
-            self.utterance = config.get('utterance', {})
-            self.dependent = config.get('dependent', {})
-
-        except FileNotFoundError:
-            raise FileNotFoundError(f'Configuration file not found: {config_path}')
-
-        except yaml.YAMLError as e:
-            raise yaml.YAMLError(f'Error parsing YAML configuration: {str(e)}')
-
-
-class UnitTurn:
-    """Represent a unit of utterance with its surrounding environmental context.
-
-    This class encapsulates an utterance and its related environmental information
-    before, during, and after the utterance. It provides functionality to convert
-    the stored data into a consolidated list format.
-
-    Attributes:
-        head: A list representing the headers.
-        utt: A list representing the core utterance content.
-        sit: A list representing the environmental situation content.
-        env_bef: A list containing environmental events before the utterance.
-        env_dur: A list containing environmental events during the utterance.
-        env_aft: A list containing environmental events after the utterance.
-    """
-
-    def __init__(self) -> None:
-        """Initialize UnitUtterance with empty lists for utterance and environmental context.
-
-        The utterance and each environmental context (before, during, after)
-        are initialized as empty lists, ready to be populated with relevant data.
-        """
-        self.speaker = ''
-        self.head = []
-        self.utt = []
-        self.sit = []
-        self.env_bef = []
-        self.env_dur = []
-        self.env_aft = []
-
-    def update(self, content: str, attribute: str) -> None:
-        """Append content to the specified class attribute if it exists.
-
-        Args:
-            content: The content to be appended.
-            attribute: The name of the attribute to which the content will be appended.
-
-        Raises:
-            DataIntegrityError: If the specified attribute does not exist.
-        """
-        if hasattr(self, attribute):
-            attr = getattr(self, attribute)
-            if isinstance(attr, list):
-                attr.append(content)
-            elif isinstance(attr, str):
-                setattr(self, attribute, content)
-            else:
-                raise DataIntegrityError(
-                    f"Attribute '{attribute}' is not a list.",
-                    attribute
-                )
-        else:
-            raise DataIntegrityError(
-                f"Attribute '{attribute}' does not exist.",
-                attribute
-            )
-
-    def to_list(self) -> list:
-        """Convert the utterance and its environmental context into a single list.
-
-        This method consolidates the environmental context (before, during, after)
-        and the utterance itself into one sequential list.
-
-        Returns:
-            A list containing the combined data from env_bef, env_dur, utt, and env_aft.
-        """
-        output = []
-        output.extend(self.head)
-        output.extend(self.sit)
-        output.extend(self.env_bef)
-        output.extend(self.env_dur)
-        output.extend(self.utt)
-        output.extend(self.env_aft)
-        return output
 
 
 def process_basic(utterance: str, config: ChatConfig) -> str:
@@ -185,13 +68,14 @@ def process_basic(utterance: str, config: ChatConfig) -> str:
 
     # Pauses (9.9 / 9.10.4)
     if not unid_basic.get('pause', False):
-
         # Pauses can take the following forms:
         # 1. (...) - Arbitrary number of dots inside parentheses.
         # 2. (xx.xx) - A decimal number inside parentheses.
         # 3. (xx:xx) - A minute:second format inside parentheses.
         # 4. (xx:xx.xx) - A minute:second.fraction format inside parentheses.
-        pause_pattern = r'\(\.{1,}\)\s?|\(\d+\.\d*\)\s?|\(\d+:\d+\.\d*\)\s?|\(\d+:\d+\)\s?'
+        pause_pattern = (
+            r'\(\.{1,}\)\s?|\(\d+\.\d*\)\s?|\(\d+:\d+\.\d*\)\s?|\(\d+:\d+\)\s?'
+        )
         utterance = re.sub(pause_pattern + r'\)', '', utterance)
 
         # 5. (ww^ww) - Pause between syllables
@@ -300,22 +184,21 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
 
     # Process each match and construct replacements
     for match in regions:
-
         start, end = match.span()
         verb = match.group(1)
         noun = match.group(2) if match.group(2) else None
         event = f'{verb} {noun}' if noun else verb
 
         if env_tag != 'null':
-            replacements.append((
-                start, end,
-                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
-            ))
+            replacements.append(
+                (
+                    start,
+                    end,
+                    f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>',
+                )
+            )
         else:
-            replacements.append((
-                start, end,
-                f'{nonverbal_token}'
-            ))
+            replacements.append((start, end, f'{nonverbal_token}'))
 
     # Complex Local Events (9.10.3)
     pattern = r'&\{(l|n)=(\w+)(?::(\w+))?\s*(.*?)\s*&}\1=\2(?::\3)?'
@@ -325,23 +208,24 @@ def process_local_event(utterance: str, config: ChatConfig) -> str:
 
     # Process each match and construct replacements
     for match in regions:
-
         start, end = match.span()
         verb = match.group(2)
         noun = match.group(3) if match.group(3) else None
         details = match.group(4).strip()
-        event = f'{verb} {noun} {details}'.strip() if noun else f'{verb} {details}'.strip()
+        event = (
+            f'{verb} {noun} {details}'.strip() if noun else f'{verb} {details}'.strip()
+        )
 
         if env_tag != 'null':
-            replacements.append((
-                start, end,
-                f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>'
-            ))
+            replacements.append(
+                (
+                    start,
+                    end,
+                    f'<{env_tag}> {event} <sep> {nonverbal_token} </{env_tag}>',
+                )
+            )
         else:
-            replacements.append((
-                start, end,
-                f'{nonverbal_token}'
-            ))
+            replacements.append((start, end, f'{nonverbal_token}'))
 
     # Apply replacements from end to start
     for start, end, replacement in sorted(replacements, reverse=True):
@@ -369,7 +253,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
         utterance = re.sub(
             r'([^<>\s]+)@si\b',
             f'<{env_tag}> sings <sep> ' + r'\1' + f' </{env_tag}>',
-            utterance
+            utterance,
         )
     else:
         utterance = re.sub(r'([^<>\s]+)@si\b', r'\1', utterance)
@@ -379,7 +263,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
             f'<{env_tag}> sign language <sep> ' + r'\1' + f' </{env_tag}>',
-            utterance
+            utterance,
         )
     else:
         utterance = re.sub(r'([^<>\s]+)@sl\b', r'\1', utterance)
@@ -389,7 +273,7 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
         utterance = re.sub(
             r'([^<>\s]+)@sl\b',
             f'<{env_tag}> sign language <sep> ' + r'\1' + f' </{env_tag}>',
-            utterance
+            utterance,
         )
     else:
         utterance = re.sub(r'([^<>\s]+)@sl\b', r'\1', utterance)
@@ -432,7 +316,9 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
 
     # Multi_letters (@k)
     if spec_form_cfg.get('multi_letters', True):
-        utterance = re.sub(r'([^<>\s]+)@k\b', lambda m: ' '.join(m.group(1)).upper(), utterance)
+        utterance = re.sub(
+            r'([^<>\s]+)@k\b', lambda m: ' '.join(m.group(1)).upper(), utterance
+        )
     else:
         utterance = re.sub(r'[^<>\s]+@k\b', '<unk>', utterance)
 
@@ -468,7 +354,9 @@ def process_special_form(utterance: str, config: ChatConfig) -> str:
 
     # Onomatopoeias (@o)
     if spec_form_cfg.get('onomatopoeia', True):
-        utterance = re.sub(r'([^<>\s]+)@o\b', lambda m: m.group(1).replace('_', ' '), utterance)
+        utterance = re.sub(
+            r'([^<>\s]+)@o\b', lambda m: m.group(1).replace('_', ' '), utterance
+        )
     else:
         utterance = re.sub(r'[^<>\s]+@o\b', '<unk>', utterance)
 
@@ -560,7 +448,7 @@ def process_disfluencies(utterance: str, config: ChatConfig) -> str:
     else:
         raise DataIntegrityError(
             f'Invalid config format for "fragment": {disfluencies_cfg}',
-            disfluencies_cfg
+            disfluencies_cfg,
         )
 
     # Phonological Fillers (&-)
@@ -573,8 +461,7 @@ def process_disfluencies(utterance: str, config: ChatConfig) -> str:
         utterance = re.sub(r'&\-[^<>\s]+', '<unk>', utterance)
     else:
         raise DataIntegrityError(
-            f'Invalid config format for "filler": {disfluencies_cfg}',
-            disfluencies_cfg
+            f'Invalid config format for "filler": {disfluencies_cfg}', disfluencies_cfg
         )
 
     # Nonwords (&~)
@@ -588,7 +475,7 @@ def process_disfluencies(utterance: str, config: ChatConfig) -> str:
     else:
         raise DataIntegrityError(
             f'Invalid config format for "nonwords": {disfluencies_cfg}',
-            disfluencies_cfg
+            disfluencies_cfg,
         )
 
     return utterance
@@ -647,15 +534,34 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
         utterance = re.sub(
             r'(?:<([^>]+)>|(\S+))\s*\[[<>{}]\d*\]',
             lambda m: m.group(1) or m.group(2),
-            utterance
+            utterance,
         )
 
     # Find all minimal regions with markers
     # Capture the identifier in group 4
     all_identifiers = [
-        '=!', '=?', '=', '!!', '!', '#', ':', '::', '%', '?',
-        '/', 'x', '//', '///', '/-', '/?', '*',
-        'e', '+', '-', '^', '^c'
+        '=!',
+        '=?',
+        '=',
+        '!!',
+        '!',
+        '#',
+        ':',
+        '::',
+        '%',
+        '?',
+        '/',
+        'x',
+        '//',
+        '///',
+        '/-',
+        '/?',
+        '*',
+        'e',
+        '+',
+        '-',
+        '^',
+        '^c',
     ]
     all_identifiers = sorted(all_identifiers, key=len, reverse=True)
 
@@ -665,14 +571,14 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     # Then match one or more identifier-event pairs
     identifier_pattern = (
         # Start with [
-        r"""\s*\[""" +
-
+        r"""\s*\["""
+        +
         # Identifier must come IMMEDIATELY after [
-        fr"""({"|".join(re.escape(i) for i in all_identifiers)})""" +
-
+        rf"""({"|".join(re.escape(i) for i in all_identifiers)})"""
+        +
         # Optional event text until ]
-        r"""(?:\s*([^\]]*))?""" +
-
+        r"""(?:\s*([^\]]*))?"""
+        +
         # End with ]
         r"""\]"""
     )
@@ -686,7 +592,6 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
     # Process each match from end to start
     replacements = []
     for match in regions:
-
         # Get base text
         phrase_in_brackets, word = match.groups()[:2]
         text = phrase_in_brackets if phrase_in_brackets else word
@@ -699,42 +604,34 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
 
         # Get all identifier-event pairs
         identifier_events = re.findall(
-            fr"""\["""
-            fr"""({"|".join(re.escape(i) for i in all_identifiers)})"""
+            rf"""\["""
+            rf"""({"|".join(re.escape(i) for i in all_identifiers)})"""
             r"""(?:\s*([^\]]*))?"""
             r"""\]""",
-            remaining_text
+            remaining_text,
         )
 
         for identifier, event in identifier_events:
-
             # Excluded Material (10.4) & Postcodes (10.5)
             if identifier == '+':
-
                 # Excluded Material (10.4)
                 if event == 'exc':
                     if scope_cfg.get('excluded', True):
                         return ''
                     else:
-                        replacements.append((
-                            start, end, f'{text}'
-                        ))
+                        replacements.append((start, end, f'{text}'))
 
                 # Back Channel (10.6)
                 elif event == 'bch':
                     if scope_cfg.get('back_channel', True):
                         return ''
                     else:
-                        replacements.append((
-                            start, end, f'{text}'
-                        ))
+                        replacements.append((start, end, f'{text}'))
 
                 # Included Turn (10.6)
                 elif event == 'trn':
                     if scope_cfg.get('include_turn', True):
-                        replacements.append((
-                            start, end, f'{text}'
-                        ))
+                        replacements.append((start, end, f'{text}'))
                     else:
                         return ''
 
@@ -743,183 +640,125 @@ def process_paralinguistic(utterance: str, config: ChatConfig) -> str:
                     if scope_cfg.get('postcode', True):
                         return ''
                     else:
-                        replacements.append((
-                            start, end, f'{text}'
-                        ))
+                        replacements.append((start, end, f'{text}'))
 
             # Excluded Material (10.4)
             elif identifier == 'e':
                 if scope_cfg.get('excluded', True):
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
                 else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
 
             # Error Marking (10.5)
             elif identifier == '*':
                 if scope_cfg.get('error', False):
                     return ''
                 else:
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
 
             # Precodes (10.6)
             elif identifier == '-':
                 if scope_cfg.get('precode', False):
                     return ''
                 else:
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
 
             # Complex Local Events (9.10.3) and Paralinguistic Material (10.2)
             elif identifier == '^' or identifier == '=!':
                 tag = scope_cfg.get('paralinguistic', 'ENV')
                 if tag != 'null':
-                    replacements.append((
-                        start, end,
-                        f'<{tag}> {event} <sep> {text} </{tag}>'
-                    ))
+                    replacements.append(
+                        (start, end, f'<{tag}> {event} <sep> {text} </{tag}>')
+                    )
                 else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
 
             # Alternative Transcription (10.3)
             elif identifier == '=?':
                 if scope_cfg.get('alternative', False):
-                    replacements.append((
-                        start, end, f'{event}'
-                    ))
+                    replacements.append((start, end, f'{event}'))
                 else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
 
             # Explanation and Comment (10.3)
             elif identifier == '=' or identifier == '%':
                 tag = scope_cfg.get('explanation', 'null')
                 if tag != 'null':
-                    replacements.append((
-                        start, end,
-                        f'<{tag}> {event} <sep> {text} </{tag}>'
-                    ))
+                    replacements.append(
+                        (start, end, f'<{tag}> {event} <sep> {text} </{tag}>')
+                    )
                 else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
 
             # Contrastive Stressing (10.2)
             elif identifier == '!!':
                 assert (event is None) or (event == '')
                 tag = scope_cfg.get('contra_stressing', 'stress')
                 if tag != 'null':
-                    replacements.append((
-                        start, end,
-                        f'<{tag}> {text} </{tag}>'
-                    ))
+                    replacements.append((start, end, f'<{tag}> {text} </{tag}>'))
                 else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
 
             # Stressing (10.2)
             elif identifier == '!':
                 assert (event is None) or (event == '')
                 tag = scope_cfg.get('stressing', 'stress')
                 if tag != 'null':
-                    replacements.append((
-                        start, end,
-                        f'<{tag}> {text} </{tag}>'
-                    ))
+                    replacements.append((start, end, f'<{tag}> {text} </{tag}>'))
                 else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
 
             # Duration (10.2)
             # TODO: For now we just remove duration marks
             elif identifier == '#':
-                replacements.append((
-                    start, end, f'{text}'
-                ))
+                replacements.append((start, end, f'{text}'))
 
             # Best Guess (10.3)
             # TODO: For now we just remove guess marks
             elif identifier == '?':
-                replacements.append((
-                    start, end, f'{text}'
-                ))
+                replacements.append((start, end, f'{text}'))
 
             # Replacement (of Real Word) (10.3)
             elif identifier == ':' or identifier == '::':
                 if scope_cfg.get('replacement', True):
-                    replacements.append((
-                        start, end, f'{event}'
-                    ))
+                    replacements.append((start, end, f'{event}'))
                 else:
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
 
             # Repetition (10.4)
             elif identifier == '/' or identifier == 'x':
                 if scope_cfg.get('repetition', False):
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
                 else:
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
 
             # Retracing (10.4)
             elif identifier == '//':
                 if scope_cfg.get('retracing', True):
-                    replacements.append((
-                        start, end, f'{text} ...'
-                    ))
+                    replacements.append((start, end, f'{text} ...'))
                 else:
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
 
             # Reformulation (10.4)
             elif identifier == '///':
                 if scope_cfg.get('reformulation', True):
-                    replacements.append((
-                        start, end, f'{text} ...'
-                    ))
+                    replacements.append((start, end, f'{text} ...'))
                 else:
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
 
             # False Start Without Retracing (10.4)
             elif identifier == '/-':
                 if scope_cfg.get('false_start', True):
-                    replacements.append((
-                        start, end, f'{text} ...'
-                    ))
+                    replacements.append((start, end, f'{text} ...'))
                 else:
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
 
             # Clause Delimiter (10.4)
             elif identifier == '^c':
                 if scope_cfg.get('clause', True):
-                    replacements.append((
-                        start, end, f'{text}'
-                    ))
+                    replacements.append((start, end, f'{text}'))
                 else:
-                    replacements.append((
-                        start, end+1, ''
-                    ))
+                    replacements.append((start, end + 1, ''))
 
             else:
                 continue
@@ -951,10 +790,7 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str, s
         speaker_id, utterance = input_line.split(':\t')
 
     except ValueError:
-        raise DataIntegrityError(
-            f'Invalid utterance format: {input_line}',
-            input_line
-        )
+        raise DataIntegrityError(f'Invalid utterance format: {input_line}', input_line)
 
     # Get configuration
     if not config.utterance.get('keep_data', True):
@@ -999,7 +835,9 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str, s
     return True, speaker, utterance
 
 
-def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, str]:
+def process_dependent_tier(
+    input_line: str, config: ChatConfig
+) -> Tuple[bool, str, str]:
     """Process a dependent tier from the input.
 
     Args:
@@ -1017,8 +855,7 @@ def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, s
 
     except ValueError:
         raise DataIntegrityError(
-            f'Invalid dependent tier format: {input_line}',
-            input_line
+            f'Invalid dependent tier format: {input_line}', input_line
         )
 
     # Get configuration
@@ -1027,11 +864,9 @@ def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, s
 
     # Process action/situation tiers
     if tier == 'act' or tier == 'sit' or tier == 'gpx':
-
         env_tag = config.utterance['scoped'].get('paralinguistic', 'ENV')
 
         if config.dependent['action'].get('keep_data', True) and env_tag != 'null':
-
             nonverbal_token = config.utterance.get('nonverbal', '<0>')
 
             content = content.strip()
@@ -1039,7 +874,8 @@ def process_dependent_tier(input_line: str, config: ChatConfig) -> Tuple[bool, s
 
         else:
             return False, tier, ''
-
+    # elif tier == 'gra':
+    #     content = content.strip()
     else:
         # TODO: complete parsing dependent tiers
         return False, tier, ''
@@ -1083,11 +919,10 @@ def split_interposed(input_line: str, config: ChatConfig) -> List[str]:
 
         # Generate reformatted output
         if config.utterance.get('interposed', True):
-
             input_line_split = [
                 '{speaker_id}:\t{first_part.strip()} +.',
                 f"*{interpose_speaker}:\t{second_part.split(' ', 1)[0]} .",
-                f"{speaker_id}:\t{' '.join(second_part.split(' ')[1:])}\n"
+                f"{speaker_id}:\t{' '.join(second_part.split(' ')[1:])}\n",
             ]
 
         else:
@@ -1113,8 +948,7 @@ def split_sync_rel(input_line: str, config: ChatConfig) -> Dict[str, list]:
 
     except ValueError:
         raise DataIntegrityError(
-            f'Invalid dependent tier format: {input_line}',
-            input_line
+            f'Invalid dependent tier format: {input_line}', input_line
         )
 
     env_dict = {'env_dur': []}
@@ -1160,71 +994,83 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
     try:
         config = ChatConfig(config_path)
 
-        processed_lines = []
+        ext = Path(output_file).suffix
+        if ext == '.cha' or ext == '.txt':
+            sink: ChatSink = ChatSinkText(config, output_file=output_file)
+        elif ext == '.jsonl':
+            sink: ChatSink = ChatSinkJSON(config, output_file=output_file)
+        elif ext == '.json':
+            sink: ChatSink = ChatSinkJSON(
+                config, output_file=output_file, is_multiline=False
+            )
+        else:
+            sink: ChatSink = ChatSinkText(config, output_file=output_file)
+            print(
+                f'Warning: Unrecognized output file extension "{ext}", defaulting to plain text format.'
+            )
+
         unit_turn = UnitTurn()
 
-        for line in lines:
+        with sink:
+            for line in lines:
+                keep_data = True
 
-            keep_data = True
-
-            # Header
-            if line.startswith('@'):
-                keep_data, line = process_header(line, config)
-                if keep_data:
-                    unit_turn.update(line, 'head')
-
-            # Utterance
-            elif line.startswith('*'):
-
-                # Start a new unit turn
-                processed_lines.extend(unit_turn.to_list())
-                unit_turn = UnitTurn()
-
-                # Default
-                if '&*' not in line:
-                    keep_data, speaker, line = process_utterance(line, config)
+                # Header
+                if line.startswith('@'):
+                    keep_data, line = process_header(line, config)
                     if keep_data:
-                        unit_turn.update(speaker, 'speaker')
-                        unit_turn.update(speaker + ' ' + line, 'utt')
+                        unit_turn.update(line, 'head')
 
-                # Interposed Words
-                else:
-                    lines_split = split_interposed(line, config)
-                    for line_split in lines_split:
-                        keep_data, speaker, line = process_utterance(line_split, config)
+                # Utterance
+                elif line.startswith('*'):
+                    # Start a new unit turn
+                    sink.write_turn(unit_turn)
+                    unit_turn = UnitTurn()
+
+                    # Default
+                    if '&*' not in line:
+                        keep_data, speaker, line = process_utterance(line, config)
                         if keep_data:
                             unit_turn.update(speaker, 'speaker')
                             unit_turn.update(speaker + ' ' + line, 'utt')
 
-            # Dependent_Tier
-            # TODO: For now only process %act and %sit
-            elif line.startswith('%'):
-
-                # Notes: Feels a bit interwined with process_dependent_tier, especially for none act tiers
-                # Default: During
-                if '<' not in line:
-                    keep_data, tier, line = process_dependent_tier(line, config)
-                    if keep_data:
-                        unit_turn.update(line, 'env_dur')
-
-                # Process the Synchrony Relations (11.2)
-                else:
-                    ordered_events = split_sync_rel(line, config)
-                    for order, events in ordered_events.items():
-                        for event in events:
-                            event = '%act:\t' + event
-                            keep_data, tier, line = process_dependent_tier(event, config)
+                    # Interposed Words
+                    else:
+                        lines_split = split_interposed(line, config)
+                        for line_split in lines_split:
+                            keep_data, speaker, line = process_utterance(
+                                line_split, config
+                            )
                             if keep_data:
-                                unit_turn.update(line, order)
+                                unit_turn.update(speaker, 'speaker')
+                                unit_turn.update(speaker + ' ' + line, 'utt')
 
-            else:
-                raise DataIntegrityError(data=line)
+                # Dependent_Tier
+                # TODO: For now only process %act and %sit
+                elif line.startswith('%'):
+                    # Notes: Feels a bit interwined with process_dependent_tier, especially for none act tiers
+                    # Default: During
+                    if '<' not in line:
+                        keep_data, tier, line = process_dependent_tier(line, config)
+                        if keep_data:
+                            unit_turn.update(line, 'env_dur')
 
-        processed_lines.extend(unit_turn.to_list())
+                    # Process the Synchrony Relations (11.2)
+                    else:
+                        ordered_events = split_sync_rel(line, config)
+                        for order, events in ordered_events.items():
+                            for event in events:
+                                event = '%act:\t' + event
+                                keep_data, tier, line = process_dependent_tier(
+                                    event, config
+                                )
+                                if keep_data:
+                                    unit_turn.update(line, order)
 
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.writelines(processed_lines)
+                else:
+                    raise DataIntegrityError(data=line)
+
+            sink.write_turn(unit_turn)
 
         print(f'Successfully processed {input_file}')
         print(f'processed content written to {output_file}')
@@ -1240,22 +1086,33 @@ def process_cha_file(input_file: str, output_file: str, config_path: str) -> Non
 
 def validate_paths(func):
     """Decorator to validate input, output, and config file paths."""
+
     @wraps(func)
     def wrapper(input_file: str, output_file: str, config_path: str, *args, **kwargs):
-        if not input_file.endswith('.cha'):
+        input_file_path = Path(input_file)
+        if not input_file_path.exists():
+            raise FileNotFoundError(f'Input file does not exist: {input_file}')
+
+        if not input_file_path.suffix == '.cha':
             raise ValueError('Input file must be a .cha file.')
-        if not output_file.endswith('.cha'):
-            raise ValueError('Output file must be a .cha file.')
-        if not config_path.endswith('.yaml'):
-            raise ValueError('Config file must be a .yaml file.')
+
+        config_path_path = Path(config_path)
+        if not config_path_path.exists():
+            raise FileNotFoundError(f'Config file does not exist: {config_path}')
+
+        if config_path_path.suffix != '.yaml' and config_path_path.suffix != '.yml':
+            raise ValueError('Config file must be a YAML file.')
         return func(input_file, output_file, config_path, *args, **kwargs)
+
     return wrapper
 
 
 @validate_paths
-def main(input_file: str = 'raw/childes/Eng-NA/Bates/Free20/amy.cha',
-         output_file: str = 'prep/childes/example.cha',
-         config_path: str = 'configs/example.yaml') -> None:
+def main(
+    input_file: str = 'raw/childes/Eng-NA/Bates/Free20/amy.cha',
+    output_file: str = 'prep/childes/example.cha',
+    config_path: str = 'configs/example.yaml',
+) -> None:
     """Process a .cha file based on the specified configuration.
 
     Args:
@@ -1270,14 +1127,32 @@ def main(input_file: str = 'raw/childes/Eng-NA/Bates/Free20/amy.cha',
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process a .cha file with a given configuration.')
-    parser.add_argument('--input_file', type=str, default='raw/childes/Eng-NA/Bates/Free20/amy.cha',
-                        help='Path to the input .cha file (default: raw/childes/Eng-NA/Bates/Free20/amy.cha)')
-    parser.add_argument('--output_file', type=str, default='prep/output.cha',
-                        help='Path to the output .cha file (default: prep/output.cha)')
-    parser.add_argument('--config_path', type=str, default='configs/default.yaml',
-                        help='Path to the configuration file (default: configs/default.yaml)')
+    parser = argparse.ArgumentParser(
+        description='Process a .cha file with a given configuration.'
+    )
+    parser.add_argument(
+        '--input_file',
+        type=str,
+        default='raw/childes/Eng-NA/Bates/Free20/amy.cha',
+        help='Path to the input .cha file (default: raw/childes/Eng-NA/Bates/Free20/amy.cha)',
+    )
+    parser.add_argument(
+        '--output_file',
+        type=str,
+        default='prep/output.cha',
+        help='Path to the output .cha file (default: prep/output.cha)',
+    )
+    parser.add_argument(
+        '--config_path',
+        type=str,
+        default='configs/default.yaml',
+        help='Path to the configuration file (default: configs/default.yaml)',
+    )
 
     args = parser.parse_args()
 
-    main(input_file=args.input_file, output_file=args.output_file, config_path=args.config_path)
+    main(
+        input_file=args.input_file,
+        output_file=args.output_file,
+        config_path=args.config_path,
+    )
