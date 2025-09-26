@@ -34,7 +34,7 @@ If you find this tool useful, please give us credit by citing:
 ```bibtex
 @misc{trabank,
     title={Trabank: A Toolkit for Computational Developmental Studies in Language Models},
-    author={Ma, Ziqiao and Chai, Joyce and Shi, Freda},
+    author={Ma, Ziqiao and Wu, Shuyu and Wang, Yixuan and Chai, Joyce and Shi, Freda},
     howpublished={https://github.com/Mars-tin/PyChildes},
     year={2025}
 }
