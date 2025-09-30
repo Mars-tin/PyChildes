@@ -813,6 +813,11 @@ def process_utterance(input_line: str, config: ChatConfig) -> Tuple[bool, str, s
     # Process paralinguistic scope markers
     utterance = process_paralinguistic(utterance, config)
 
+    if utterance == '':
+        # Sometimes paralinguistic processing can remove the entire utterance,
+        # In this case this utterance should not be kept.
+        return False, speaker, ''
+
     # Process special forms, must go after paralinguistic
     utterance = process_special_form(utterance, config)
 
